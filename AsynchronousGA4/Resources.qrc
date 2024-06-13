@@ -1,0 +1,19 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>Images/add.svg</file>
+    <file>Images/copy.svg</file>
+    <file>Images/cut.svg</file>
+    <file>Images/font.svg</file>
+    <file>Images/exit.svg</file>
+    <file>Images/new.svg</file>
+    <file>Images/open.svg</file>
+    <file>Images/paste.svg</file>
+    <file>Images/preferences.svg</file>
+    <file>Images/redo.svg</file>
+    <file>Images/remove.svg</file>
+    <file>Images/save-as.svg</file>
+    <file>Images/save.svg</file>
+    <file>Images/undo.svg</file>
+    <file>Images/icon_design.svg</file>
+</qresource>
+</RCC>
