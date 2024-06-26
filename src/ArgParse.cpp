@@ -9,7 +9,7 @@
 
 #include "ArgParse.h"
 
-#include "pystring.h"
+#include "pystring/pystring.h"
 
 #include <iostream>
 #include <map>
@@ -127,7 +127,7 @@ int ArgParse::Parse()
                 {
                     if (ArgumentsOK(m_rawArguments[j], m_argumentList[it->second]) == false)
                     {
-                        m_lastError = m_rawArguments[j] + " is wrong type"s;
+                        m_lastError = arguments[i] + " " + m_rawArguments[j] + " is wrong type"s;
                         return __LINE__;
                     }
                     argumentList.push_back(m_rawArguments[j]);
