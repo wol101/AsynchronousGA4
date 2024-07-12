@@ -1316,7 +1316,7 @@ void MainWindow::font()
 
 void MainWindow::about()
 {
-    QString description(u8"This application coordinates optimisation using \nremote clients to do the hard work.\n\u00a9 William Sellers 2022.\nReleased under GPL v3.");
+    QString description(u8"This application coordinates optimisation using \nremote clients to do the hard work.\n\u00a9 William Sellers 2024.\nReleased under GPL v3.");
     QString buildDate = QString("Build: %1 %2").arg(__DATE__, __TIME__);
     QString buildType;
 #ifdef NDEBUG
@@ -1327,7 +1327,7 @@ void MainWindow::about()
     QString buildInformation = QSysInfo::buildAbi();
 
     QMessageBox msgBox;
-    msgBox.setText(tr("<b>AsynchronousGAQt</b>: Genetic Algorithm Server"));
+    msgBox.setText(tr("<b>AsynchronousGA4</b>: Genetic Algorithm Server"));
     msgBox.setInformativeText(QString("%1\n%2 %3\n%4").arg(description, buildDate, buildType, buildInformation));
     msgBox.setStandardButtons(QMessageBox::Ok);
     msgBox.setDefaultButton(QMessageBox::Ok);
