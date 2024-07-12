@@ -1,6 +1,8 @@
 #include "GAParametersDialog.h"
 #include "ui_GAParametersDialog.h"
 
+#include "MainWindow.h"
+
 #include <QSettings>
 #include <QFile>
 #include <QDomDocument>
@@ -13,6 +15,7 @@ GAParametersDialog::GAParametersDialog(QWidget *parent) :
     ui(new Ui::GAParametersDialog)
 {
     ui->setupUi(this);
+    MainWindow::layoutSpacing(this);
 
     connect(ui->pushButtonCancel, &QPushButton::clicked, this, &GAParametersDialog::reject);
     connect(ui->pushButtonOK, &QPushButton::clicked, this, &GAParametersDialog::accept);

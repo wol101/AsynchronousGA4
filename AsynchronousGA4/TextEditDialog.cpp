@@ -2,6 +2,7 @@
 #include "ui_TextEditDialog.h"
 
 #include "BasicXMLSyntaxHighlighter.h"
+#include "MainWindow.h"
 
 #include <QPlainTextEdit>
 #include <QMessageBox>
@@ -14,6 +15,7 @@ TextEditDialog::TextEditDialog(QWidget *parent) :
     ui(new Ui::TextEditDialog)
 {
     ui->setupUi(this);
+    MainWindow::layoutSpacing(this);
 
     connect(ui->pushButtonOK, SIGNAL(clicked()), this, SLOT(accept()));
     connect(ui->pushButtonCancel, SIGNAL(clicked()), this, SLOT(reject()));

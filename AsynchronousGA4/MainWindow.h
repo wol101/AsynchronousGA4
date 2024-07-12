@@ -40,6 +40,9 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     virtual ~MainWindow() override;
 
+    // utility
+    static void layoutSpacing(QWidget *container);
+
 public slots:
     void pushButtonParameterFileClicked();
     void pushButtonStartingPopulationFileClicked();
