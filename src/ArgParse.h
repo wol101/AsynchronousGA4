@@ -40,6 +40,7 @@ public:
     void Usage();
 
     // these get the values of arguments indexed on their longName values
+    // they return true if the argument exists and false if it does not
     bool Get(const std::string &argument, std::vector<std::string> *strings);
     bool Get(const std::string &argument, std::vector<int> *ints);
     bool Get(const std::string &argument, std::vector<bool> *bools);
@@ -50,6 +51,7 @@ public:
     bool Get(const std::string &argument, double *d);
 
     // these get the values of end arguments
+    // they return true if the argument exists and false if it does not
     bool Get(std::vector<std::string> *strings);
     bool Get(std::vector<int> *ints);
     bool Get(std::vector<bool> *bools);
@@ -60,13 +62,12 @@ public:
     bool Get(double *d);
 
     // mostly internal utilities
-    static bool IsNumber(const std::string &s);
-    static bool IsInt(const std::string &s);
-    static bool IsBool(const std::string &s);
-    static int ToBool(const std::string &s);
-    static double ToDouble(const std::string &buf);
-    static int ToInt(const std::string &buf);
-
+    static bool IsNumber(const std::string &s); // any valid number
+    static bool IsInt(const std::string &s); // positive integer without '+'
+    static bool IsBool(const std::string &s); // valid bool is {"false", "off", "no", "0", "true", "on", "yes", "1"}
+    static bool ToBool(const std::string &s, bool *valid = nullptr); // valid bool is {"false", "off", "no", "0", "true", "on", "yes", "1"}; returns false if not valid
+    static double ToDouble(const std::string &buf, bool *valid = nullptr); // returns zero if not valid
+    static int ToInt(const std::string &buf, bool *valid = nullptr); // returns zero if not valid
 
 private:
     struct Argument

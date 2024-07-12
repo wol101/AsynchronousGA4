@@ -26,8 +26,6 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include <sys/stat.h>
-#include <sys/timeb.h>
 #include <map>
 #include <algorithm>
 #include <cstdarg>
@@ -55,7 +53,7 @@ int main(int argc, const char **argv)
     std::string compileDate(__DATE__);
     std::string compileTime(__TIME__);
     ArgParse argparse;
-    argparse.Initialise(argc, argv, "AsynchronousGA2022 distributed genetic algorithm program "s + compileDate + " "s + compileTime, 0, 0);
+    argparse.Initialise(argc, argv, "AsynchronousGA4CL distributed genetic algorithm program "s + compileDate + " "s + compileTime, 0, 0);
     // required arguments
     argparse.AddArgument("-p"s, "--parameterFile"s, "Parameter file specifying the GA options"s, ""s, 1, true, ArgParse::String);
     argparse.AddArgument("-b"s, "--baseXMLFile"s, "Base XML file that is optimised"s, ""s, 1, true, ArgParse::String);
@@ -126,8 +124,9 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
     }
 #endif
 
-    time_t theTime = time(nullptr);
-    struct tm *theLocalTime = localtime(&theTime);
+    auto currentTime = std::chrono::system_clock::now();
+    auto localSecondsTime = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(currentTime)); //needs to be cast to seconds otherwise %S has decimal digits
+    std::string timeString = std::format("{:%Y-%m-%d_%H.%M.%S}", localSecondsTime);
     std::string logFileName;
 
     if (m_baseXMLFile.GetSize() == 0)
@@ -136,7 +135,7 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
         return __LINE__;
     }
 
-    m_parameterFile = pystring::os::path::abspath(parameterFile, std::filesystem::current_path().u8string());
+    m_parameterFile = pystring::os::path::abspath(parameterFile, std::filesystem::current_path().string());
     if (m_preferences.ReadPreferences(m_parameterFile))
     {
         ReportProgress("Error reading "s + m_parameterFile, 0);
@@ -153,23 +152,17 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
 
     // overwrite starting population if defined
     if (startingPopulation.size()) m_preferences.startingPopulation = startingPopulation;
-    m_preferences.startingPopulation = pystring::os::path::abspath(m_preferences.startingPopulation, std::filesystem::current_path().u8string());
+    m_preferences.startingPopulation = pystring::os::path::abspath(m_preferences.startingPopulation, std::filesystem::current_path().string());
 
     // create a directory for all the output
     if (outputDirectory.size())
     {
-        m_outputFolderName = pystring::os::path::abspath(outputDirectory, std::filesystem::current_path().u8string());
+        m_outputFolderName = pystring::os::path::abspath(outputDirectory, std::filesystem::current_path().string());
     }
     else
     {
-        std::string timedFolder = ToString("Run_%04d-%02d-%02d_%02d.%02d.%02d",
-                                           theLocalTime->tm_year + 1900,
-                                           theLocalTime->tm_mon + 1,
-                                           theLocalTime->tm_mday,
-                                           theLocalTime->tm_hour,
-                                           theLocalTime->tm_min,
-                                           theLocalTime->tm_sec);
-        m_outputFolderName = pystring::os::path::abspath(timedFolder, std::filesystem::current_path().u8string());
+        std::string timedFolder = "Run_"s + timeString;
+        m_outputFolderName = pystring::os::path::abspath(timedFolder, std::filesystem::current_path().string());
     }
     if (std::filesystem::exists(m_outputFolderName))
     {
@@ -209,7 +202,7 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
     }
     CloseFileGuard closeFileGuard(&m_outputLogFile);
     m_outputLogFile << "GA build " << __DATE__ << " " << __TIME__ "\n";
-    m_outputLogFile << "Log produced " << asctime(theLocalTime);
+    m_outputLogFile << "Log produced " << timeString;
     m_outputLogFile << "parameterFile \"" << m_parameterFile << "\"\n";
     m_outputLogFile << m_preferences.GetPreferencesString() << "\n";
     m_outputLogFile.flush();
@@ -276,7 +269,7 @@ int GAMain::LoadBaseXMLFile(const std::string &filename)
 int GAMain::Evolve()
 {
     // This is the asynchronous evolution loop
-    double evolveStartTime = std::chrono::duration_cast<std::chrono::duration<double, std::chrono::seconds::period>>(std::chrono::system_clock::now().time_since_epoch()).count();
+    double evolveStartTime = std::chrono::duration_cast<std::chrono::duration<double, std::chrono::seconds::period>>(std::chrono::steady_clock::now().time_since_epoch()).count();
     m_evolveIdentifier = uint64_t(evolveStartTime);
     uint32_t submitCount = 0;
     uint32_t returnCount = 0;
@@ -320,7 +313,7 @@ int GAMain::Evolve()
     double slowPeriodicTaskInterval = 100; // this is used for internal housekeeping of things like the watchDogTimerLimit so 100s should be fine
     while (returnCount < uint32_t(m_preferences.maxReproductions) && stopSendingFlag == false && shouldStop == false)
     {
-        double currentTime = std::chrono::duration_cast<std::chrono::duration<double, std::chrono::seconds::period>>(std::chrono::system_clock::now().time_since_epoch()).count();
+        double currentTime = std::chrono::duration_cast<std::chrono::duration<double, std::chrono::seconds::period>>(std::chrono::steady_clock::now().time_since_epoch()).count();
         if (currentTime >= lastTime + fastPeriodicTaskInterval) // this part of the loop is for things that don't need to be done all that often
         {
             lastTime = currentTime;
@@ -710,8 +703,8 @@ int GAMain::OnlyKeepLastMatching(const std::string &regexPattern)
     {
         for (auto &&entry : std::filesystem::directory_iterator(m_outputFolderName))
         {
-            std::string basename = pystring::os::path::basename(entry.path().u8string());
-            if (std::regex_match(basename, regex)) { directoryContents.push_back(entry.path().u8string()); }
+            std::string basename = pystring::os::path::basename(entry.path().string());
+            if (std::regex_match(basename, regex)) { directoryContents.push_back(entry.path().string()); }
         }
     }
     catch (std::exception& e)

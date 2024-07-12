@@ -9,7 +9,7 @@
 
 #include "ArgParse.h"
 
-#include "pystring/pystring.h"
+#include "pystring.h"
 
 #include <iostream>
 #include <map>
@@ -481,26 +481,35 @@ bool ArgParse::IsInt(const std::string &s)
 
 bool ArgParse::IsBool(const std::string &s)
 {
+    const static std::vector<std::string> trueFalseWords = {"false", "off", "no", "0", "true", "on", "yes", "1"};
     std::string lower = pystring::lower(s);
-    if (lower == "false"s || lower == "true") return true;
+    if (std::find(trueFalseWords.begin(), trueFalseWords.end(), lower) != trueFalseWords.end()) return true;
     return false;
 }
 
-int ArgParse::ToBool(const std::string &s)
+bool ArgParse::ToBool(const std::string &s, bool *valid)
 {
+    if (valid) *valid = true;
+    const static std::vector<std::string> falseWords = {"false", "off", "no", "0"};
+    const static std::vector<std::string> trueWords = {"true", "on", "yes", "1"};
     std::string lower = pystring::lower(s);
-    if (lower == "false"s) return 0;
-    if (lower == "true"s) return 1;
-    return -1;
+    if (std::find(falseWords.begin(), falseWords.end(), lower) != falseWords.end()) return false;
+    if (std::find(trueWords.begin(), trueWords.end(), lower) != trueWords.end()) return true;
+    if (valid) *valid = false;
+    return false;
 }
 
-double ArgParse::ToDouble(const std::string &buf)
+double ArgParse::ToDouble(const std::string &buf, bool *valid)
 {
+    if (valid) *valid = true;
+    if (!IsNumber(buf)) { if (valid) *valid = false; return 0; }
     return std::strtod(buf.c_str(), nullptr); // note: not using std::stod because I do not want exceptions to be thrown
 }
 
- int ArgParse::ToInt(const std::string &buf)
+ int ArgParse::ToInt(const std::string &buf, bool *valid)
 {
+    if (valid) *valid = true;
+    if (!IsInt(buf)) { if (valid) *valid = false; return 0; }
     return int(std::strtol(buf.c_str(), nullptr, 0)); // note: not using std::stoi because I do not want exceptions to be thrown
 }
 

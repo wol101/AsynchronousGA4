@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(AsynchronousGA2022 LANGUAGES CXX)
+project(AsynchronousGA4CL LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(AsynchronousGA2022
+add_executable(AsynchronousGA4CL
     ../src/ArgParse.cpp
     ../src/DataFile.cpp
     ../src/GAASIO.cpp
@@ -33,14 +33,14 @@ add_executable(AsynchronousGA2022
     ../pystring/pystring.h
 )
 
-target_include_directories(AsynchronousGA2022 PRIVATE
+target_include_directories(AsynchronousGA4CL PRIVATE
     ../src
     ../asio-1.18.2/include
     ../pystring
 )
 
 if (MSVC)
-    target_compile_options(AsynchronousGA2022 PRIVATE /bigobj /MT)
+    target_compile_options(AsynchronousGA4CL PRIVATE /bigobj /MT)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS _WINSOCK_DEPRECATED_NO_WARNINGS _WIN32_WINNT=_WIN32_WINNT_WIN7)
 endif ()
 
