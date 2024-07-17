@@ -144,7 +144,7 @@ private:
     bool maybeSave();
     void runGA();
     void runGaitSym();
-    void open(const QString &fileName);
+    void openFile(const QString &fileName);
     void setEditorFonts();
 
     std::stringstream m_capturedCerr;

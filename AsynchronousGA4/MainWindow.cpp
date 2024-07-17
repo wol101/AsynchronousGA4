@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_editorFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
     m_mergeXMLTimer = new QTimer(this); // this timer
-    connect(m_mergeXMLTimer, SIGNAL(timeout()), this, SLOT(runMergeXML()));
+    connect(m_mergeXMLTimer, &QTimer::timeout, this, &MainWindow::runMergeXML);
 
     // adjust the appearance of the main window
     ui->mainToolBar->hide();
@@ -44,44 +44,44 @@ MainWindow::MainWindow(QWidget *parent) :
     createMenus();
 
     // set up the file browse slots
-    connect(ui->pushButtonParameterFile, SIGNAL(clicked()), this, SLOT(pushButtonParameterFileClicked()));
-    connect(ui->pushButtonStartingPopulationFile, SIGNAL(clicked()), this, SLOT(pushButtonStartingPopulationFileClicked()));
-    connect(ui->pushButtonXMLMasterFile, SIGNAL(clicked()), this, SLOT(pushButtonXMLMasterFileClicked()));
-    connect(ui->pushButtonOutputFolder, SIGNAL(clicked()), this, SLOT(pushButtonOutputFolderClicked()));
-    connect(ui->pushButtonModelConfigurationFile, SIGNAL(clicked()), this, SLOT(pushButtonModelConfigurationFileClicked()));
-    connect(ui->pushButtonModelPopulationFile, SIGNAL(clicked()), this, SLOT(pushButtonModelPopulationFileClicked()));
-    connect(ui->pushButtonDriverFile, SIGNAL(clicked()), this, SLOT(pushButtonDriverFileClicked()));
-    connect(ui->pushButtonWorkingFolder, SIGNAL(clicked()), this, SLOT(pushButtonWorkingFolderClicked()));
-    connect(ui->pushButtonMergeXMLFile, SIGNAL(clicked()), this, SLOT(pushButtonMergeXMLFileClicked()));
-    connect(ui->pushButtonGaitSymExecutable, SIGNAL(clicked()), this, SLOT(pushButtonGaitSymExecutableClicked()));
-    connect(ui->pushButtonMergeScriptExecutable, SIGNAL(clicked()), this, SLOT(pushButtonMergeScriptExecutableClicked()));
-    connect(ui->pushButtonGAExecutable, SIGNAL(clicked()), this, SLOT(pushButtonGAExecutableClicked()));
-    connect(ui->pushButtonStart, SIGNAL(clicked()), this, SLOT(pushButtonStartClicked()));
-    connect(ui->pushButtonStop, SIGNAL(clicked()), this, SLOT(pushButtonStopClicked()));
+    connect(ui->pushButtonParameterFile, &QPushButton::clicked, this, &MainWindow::pushButtonParameterFileClicked);
+    connect(ui->pushButtonStartingPopulationFile, &QPushButton::clicked, this, &MainWindow::pushButtonStartingPopulationFileClicked);
+    connect(ui->pushButtonXMLMasterFile, &QPushButton::clicked, this, &MainWindow::pushButtonXMLMasterFileClicked);
+    connect(ui->pushButtonOutputFolder, &QPushButton::clicked, this, &MainWindow::pushButtonOutputFolderClicked);
+    connect(ui->pushButtonModelConfigurationFile, &QPushButton::clicked, this, &MainWindow::pushButtonModelConfigurationFileClicked);
+    connect(ui->pushButtonModelPopulationFile, &QPushButton::clicked, this, &MainWindow::pushButtonModelPopulationFileClicked);
+    connect(ui->pushButtonDriverFile, &QPushButton::clicked, this, &MainWindow::pushButtonDriverFileClicked);
+    connect(ui->pushButtonWorkingFolder, &QPushButton::clicked, this, &MainWindow::pushButtonWorkingFolderClicked);
+    connect(ui->pushButtonMergeXMLFile, &QPushButton::clicked, this, &MainWindow::pushButtonMergeXMLFileClicked);
+    connect(ui->pushButtonGaitSymExecutable, &QPushButton::clicked, this, &MainWindow::pushButtonGaitSymExecutableClicked);
+    connect(ui->pushButtonMergeScriptExecutable, &QPushButton::clicked, this, &MainWindow::pushButtonMergeScriptExecutableClicked);
+    connect(ui->pushButtonGAExecutable, &QPushButton::clicked, this, &MainWindow::pushButtonGAExecutableClicked);
+    connect(ui->pushButtonStart, &QPushButton::clicked, this, &MainWindow::pushButtonStartClicked);
+    connect(ui->pushButtonStop, &QPushButton::clicked, this, &MainWindow::pushButtonStopClicked);
 
     // handle the check box
-    connect(ui->checkBoxMergeXMLActivate, SIGNAL(clicked()), this, SLOT(checkBoxMergeXMLActivateClicked()));
+    connect(ui->checkBoxMergeXMLActivate, &QCheckBox::clicked, this, &MainWindow::checkBoxMergeXMLActivateClicked);
 
     // and this updates the buttons too
-    connect(ui->lineEditOutputFolder, SIGNAL(textChanged(const QString &)), this, SLOT(lineEditOutputFolderTextChanged(const QString &)));
-    connect(ui->lineEditParameterFile, SIGNAL(textChanged(const QString &)), this, SLOT(lineEditParameterFileTextChanged(const QString &)));
-    connect(ui->lineEditXMLMasterFile, SIGNAL(textChanged(const QString &)), this, SLOT(lineEditXMLMasterFileTextChanged(const QString &)));
-    connect(ui->lineEditStartingPopulationFile, SIGNAL(textChanged(const QString &)), this, SLOT(lineEditStartingPopulationFileTextChanged(const QString &)));
-    connect(ui->lineEditModelConfigurationFile, SIGNAL(textChanged(const QString &)), this, SLOT(lineEditModelConfigurationFileTextChanged(const QString &)));
-    connect(ui->lineEditModelPopulationFile, SIGNAL(textChanged(const QString &)), this, SLOT(lineEditModelPopulationFileTextChanged(const QString &)));
-    connect(ui->lineEditDriverFile, SIGNAL(textChanged(const QString &)), this, SLOT(lineEditDriverFileTextChanged(const QString &)));
-    connect(ui->lineEditMergeXMLFile, SIGNAL(textChanged(const QString &)), this, SLOT(lineEditMergeXMLFileTextChanged(const QString &)));
-    connect(ui->lineEditGaitSymExecutable, SIGNAL(textChanged(const QString &)), this, SLOT(lineEditGaitSymExecutableTextChanged(const QString &)));
-    connect(ui->lineEditMergeScriptExecutable, SIGNAL(textChanged(const QString &)), this, SLOT(lineEditMergeScriptExecutableTextChanged(const QString &)));
-    connect(ui->lineEditGAExecutable, SIGNAL(textChanged(const QString &)), this, SLOT(lineEditGAExecutableTextChanged(const QString &)));
-    connect(ui->spinBoxLogLevel, SIGNAL(textChanged(const QString &)), this, SLOT(spinBoxLogLevelTextChanged(const QString &)));
-    connect(ui->spinBoxPort, SIGNAL(textChanged(const QString &)), this, SLOT(spinBoxTextChanged(const QString &)));
-    connect(ui->doubleSpinBoxEndValue, SIGNAL(textChanged(const QString &)), this, SLOT(spinBoxTextChanged(const QString &)));
-    connect(ui->doubleSpinBoxOutputCycle, SIGNAL(textChanged(const QString &)), this, SLOT(spinBoxTextChanged(const QString &)));
-    connect(ui->doubleSpinBoxStartValue, SIGNAL(textChanged(const QString &)), this, SLOT(spinBoxTextChanged(const QString &)));
-    connect(ui->doubleSpinBoxStepValue, SIGNAL(textChanged(const QString &)), this, SLOT(spinBoxTextChanged(const QString &)));
-    connect(ui->checkBoxMergeXMLActivate, SIGNAL(stateChanged(int)), this, SLOT(checkBoxStateChanged(int)));
-    connect(ui->checkBoxCycleTime, SIGNAL(stateChanged(int)), this, SLOT(checkBoxStateChanged(int)));
+    connect(ui->lineEditOutputFolder, &QLineEdit::textChanged, this, &MainWindow::lineEditOutputFolderTextChanged);
+    connect(ui->lineEditParameterFile, &QLineEdit::textChanged, this, &MainWindow::lineEditParameterFileTextChanged);
+    connect(ui->lineEditXMLMasterFile, &QLineEdit::textChanged, this, &MainWindow::lineEditXMLMasterFileTextChanged);
+    connect(ui->lineEditStartingPopulationFile, &QLineEdit::textChanged, this, &MainWindow::lineEditStartingPopulationFileTextChanged);
+    connect(ui->lineEditModelConfigurationFile, &QLineEdit::textChanged, this, &MainWindow::lineEditModelConfigurationFileTextChanged);
+    connect(ui->lineEditModelPopulationFile, &QLineEdit::textChanged, this, &MainWindow::lineEditModelPopulationFileTextChanged);
+    connect(ui->lineEditDriverFile, &QLineEdit::textChanged, this, &MainWindow::lineEditDriverFileTextChanged);
+    connect(ui->lineEditMergeXMLFile, &QLineEdit::textChanged, this, &MainWindow::lineEditMergeXMLFileTextChanged);
+    connect(ui->lineEditGaitSymExecutable, &QLineEdit::textChanged, this, &MainWindow::lineEditGaitSymExecutableTextChanged);
+    connect(ui->lineEditMergeScriptExecutable, &QLineEdit::textChanged, this, &MainWindow::lineEditMergeScriptExecutableTextChanged);
+    connect(ui->lineEditGAExecutable, &QLineEdit::textChanged, this, &MainWindow::lineEditGAExecutableTextChanged);
+    connect(ui->spinBoxLogLevel, &QSpinBox::textChanged, this, &MainWindow::spinBoxLogLevelTextChanged);
+    connect(ui->spinBoxPort, &QSpinBox::textChanged, this, &MainWindow::spinBoxTextChanged);
+    connect(ui->doubleSpinBoxEndValue, &QDoubleSpinBox::textChanged, this, &MainWindow::spinBoxTextChanged);
+    connect(ui->doubleSpinBoxOutputCycle, &QDoubleSpinBox::textChanged, this, &MainWindow::spinBoxTextChanged);
+    connect(ui->doubleSpinBoxStartValue, &QDoubleSpinBox::textChanged, this, &MainWindow::spinBoxTextChanged);
+    connect(ui->doubleSpinBoxStepValue, &QDoubleSpinBox::textChanged, this, &MainWindow::spinBoxTextChanged);
+    connect(ui->checkBoxMergeXMLActivate, &QCheckBox::stateChanged, this, &MainWindow::checkBoxStateChanged);
+    connect(ui->checkBoxCycleTime, &QCheckBox::stateChanged, this, &MainWindow::checkBoxStateChanged);
 
     // put a new context menu on the linedit widgets that point to file names
     QList<QLineEdit *> listQLineEdit = this->findChildren<QLineEdit *>(QString(), Qt::FindChildrenRecursively);
@@ -91,7 +91,7 @@ MainWindow::MainWindow(QWidget *parent) :
             (*it) == ui->lineEditGaitSymExecutable || (*it) == ui->lineEditGAExecutable ||
             (*it) == ui->lineEditMergeScriptExecutable) continue;
         (*it)->setContextMenuPolicy(Qt::CustomContextMenu);
-        QObject::connect((*it), SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(menuRequestPath(QPoint)));
+        QObject::connect((*it), &QWidget::customContextMenuRequested, this, &MainWindow::menuRequestPath);
     }
 
     readSettings();
@@ -100,7 +100,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QString asynchronousGAFileName = m_asynchronousGAFileName;
     newFile();
     QFileInfo fileInfo(asynchronousGAFileName);
-    if (fileInfo.exists() && fileInfo.isFile()) open(asynchronousGAFileName);
+    if (fileInfo.exists() && fileInfo.isFile()) openFile(asynchronousGAFileName);
 
     // and sort out the buttons
     activateButtons();
@@ -760,6 +760,7 @@ void MainWindow::activateButtons()
     ui->pushButtonWorkingFolder->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->pushButtonMergeXMLFile->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->pushButtonGaitSymExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
+    ui->pushButtonMergeScriptExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->pushButtonGAExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0);
     ui->lineEditOutputFolder->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && !ui->checkBoxMergeXMLActivate->isChecked());
     ui->lineEditParameterFile->setEnabled(m_ga == nullptr && m_runMergeXML == 0);
@@ -919,7 +920,7 @@ void MainWindow::createActions()
     openAct = new QAction(QIcon(":/Images/open.svg"), tr("&Open..."), this);
     openAct->setShortcuts(QKeySequence::Open);
     openAct->setStatusTip(tr("Open an existing file"));
-    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
+    connect(openAct, &QAction::triggered, this, &MainWindow::open);
 
     saveAct = new QAction(QIcon(":/Images/save.svg"), tr("&Save"), this);
     saveAct->setShortcuts(QKeySequence::Save);
@@ -1038,11 +1039,11 @@ void MainWindow::open()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open AsynchronousGA Private Settings File"), m_asynchronousGAFileName, tr("XML Files (*.xml);;Any File (*.* *)"));
     if (!fileName.isEmpty())
     {
-        open(fileName);
+        openFile(fileName);
     }
 }
 
-void MainWindow::open(const QString &fileName)
+void MainWindow::openFile(const QString &fileName)
 {
     m_asynchronousGAFileName = fileName;
     m_asynchronousGAFileModified = false;
@@ -1233,7 +1234,7 @@ void MainWindow::editSettings()
         editFile.close();
         if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("'%1' written").arg(m_asynchronousGAFileName));
         ui->statusBar->showMessage(QString("'%1' written").arg(m_asynchronousGAFileName));
-        open(m_asynchronousGAFileName);
+        openFile(m_asynchronousGAFileName);
     }
     else
     {
