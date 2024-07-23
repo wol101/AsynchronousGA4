@@ -91,8 +91,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for (QList<QLineEdit *>::iterator it = listQLineEdit.begin(); it != listQLineEdit.end(); it++)
     {
         if ((*it) == ui->lineEditWorkingFolder || (*it) == ui->lineEditOutputFolder ||
-            (*it) == ui->lineEditGaitSymExecutable || (*it) == ui->lineEditGAExecutable ||
-            (*it) == ui->lineEditPostMergeScript) continue;
+            (*it) == ui->lineEditGaitSymExecutable || (*it) == ui->lineEditGAExecutable) continue;
         (*it)->setContextMenuPolicy(Qt::CustomContextMenu);
         QObject::connect((*it), &QWidget::customContextMenuRequested, this, &MainWindow::menuRequestPath);
     }
@@ -1188,7 +1187,7 @@ void MainWindow::save()
     writeSettings(); // makes sure the settings are all up to date
 
     QDomDocument doc("AsynchronousGA_Settings_Document_0.1");
-    QDomProcessingInstruction  pi = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\"");
+    QDomProcessingInstruction pi = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\"");
     doc.appendChild(pi);
     QDomElement root = doc.createElement("ASYNCHRONOUSGA");
     doc.appendChild(root);
