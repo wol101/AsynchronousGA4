@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->pushButtonWorkingFolder, &QPushButton::clicked, this, &MainWindow::pushButtonWorkingFolderClicked);
     connect(ui->pushButtonMergeXMLFile, &QPushButton::clicked, this, &MainWindow::pushButtonMergeXMLFileClicked);
     connect(ui->pushButtonGaitSymExecutable, &QPushButton::clicked, this, &MainWindow::pushButtonGaitSymExecutableClicked);
-    connect(ui->pushButtonMergeScriptExecutable, &QPushButton::clicked, this, &MainWindow::pushButtonMergeScriptExecutableClicked);
+    connect(ui->pushButtonPostMergeScript, &QPushButton::clicked, this, &MainWindow::pushButtonPostMergeScriptClicked);
     connect(ui->pushButtonGAExecutable, &QPushButton::clicked, this, &MainWindow::pushButtonGAExecutableClicked);
     connect(ui->pushButtonStart, &QPushButton::clicked, this, &MainWindow::pushButtonStartClicked);
     connect(ui->pushButtonStop, &QPushButton::clicked, this, &MainWindow::pushButtonStopClicked);
@@ -75,7 +75,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->lineEditDriverFile, &QLineEdit::textChanged, this, &MainWindow::lineEditDriverFileTextChanged);
     connect(ui->lineEditMergeXMLFile, &QLineEdit::textChanged, this, &MainWindow::lineEditMergeXMLFileTextChanged);
     connect(ui->lineEditGaitSymExecutable, &QLineEdit::textChanged, this, &MainWindow::lineEditGaitSymExecutableTextChanged);
-    connect(ui->lineEditMergeScriptExecutable, &QLineEdit::textChanged, this, &MainWindow::lineEditMergeScriptExecutableTextChanged);
+    connect(ui->lineEditPostMergeScript, &QLineEdit::textChanged, this, &MainWindow::lineEditPostMergeScriptTextChanged);
     connect(ui->lineEditGAExecutable, &QLineEdit::textChanged, this, &MainWindow::lineEditGAExecutableTextChanged);
     connect(ui->spinBoxLogLevel, &QSpinBox::textChanged, this, &MainWindow::spinBoxLogLevelTextChanged);
     connect(ui->spinBoxPort, &QSpinBox::textChanged, this, &MainWindow::spinBoxTextChanged);
@@ -92,7 +92,7 @@ MainWindow::MainWindow(QWidget *parent) :
     {
         if ((*it) == ui->lineEditWorkingFolder || (*it) == ui->lineEditOutputFolder ||
             (*it) == ui->lineEditGaitSymExecutable || (*it) == ui->lineEditGAExecutable ||
-            (*it) == ui->lineEditMergeScriptExecutable) continue;
+            (*it) == ui->lineEditPostMergeScript) continue;
         (*it)->setContextMenuPolicy(Qt::CustomContextMenu);
         QObject::connect((*it), &QWidget::customContextMenuRequested, this, &MainWindow::menuRequestPath);
     }
@@ -244,16 +244,16 @@ void MainWindow::pushButtonGaitSymExecutableClicked()
     }
 }
 
-void MainWindow::pushButtonMergeScriptExecutableClicked()
+void MainWindow::pushButtonPostMergeScriptClicked()
 {
 #if defined(_WIN32) || defined(WIN32)
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select the Merge Script executable"), ui->lineEditMergeScriptExecutable->text(), tr("Executable Files (*.exe);;Any File (*.* *)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select the Merge Script executable"), ui->lineEditPostMergeScript->text(), tr("Executable Files (*.exe);;Any File (*.* *)"));
 #else
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select the Merge Script executable"), ui->lineEditMergeScriptExecutable->text(), tr("Executable Files (*)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select the Merge Script executable"), ui->lineEditPostMergeScript->text(), tr("Executable Files (*)"));
 #endif
     if (!fileName.isEmpty())
     {
-        ui->lineEditMergeScriptExecutable->setText(fileName);
+        ui->lineEditPostMergeScript->setText(fileName);
     }
 }
 
@@ -508,7 +508,7 @@ void MainWindow::runMergeXML()
 
 void MainWindow::runPostMergeScript()
 {
-    QString mergeScriptExecutable = ui->lineEditMergeScriptExecutable->text();
+    QString mergeScriptExecutable = ui->lineEditPostMergeScript->text();
     if (mergeScriptExecutable.isEmpty()) return;
 
     if (ui->spinBoxLogLevel->value() > 0) appendProgress("Running Post Merge Script");
@@ -734,7 +734,7 @@ void MainWindow::lineEditGaitSymExecutableTextChanged(const QString & /*text*/)
     activateButtons();
 }
 
-void MainWindow::lineEditMergeScriptExecutableTextChanged(const QString & /*text*/)
+void MainWindow::lineEditPostMergeScriptTextChanged(const QString & /*text*/)
 {
     m_asynchronousGAFileModified = true;
     activateButtons();
@@ -780,7 +780,7 @@ void MainWindow::activateButtons()
     ui->pushButtonWorkingFolder->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->pushButtonMergeXMLFile->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->pushButtonGaitSymExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
-    ui->pushButtonMergeScriptExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
+    ui->pushButtonPostMergeScript->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->pushButtonGAExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0);
     ui->lineEditOutputFolder->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && !ui->checkBoxMergeXMLActivate->isChecked());
     ui->lineEditParameterFile->setEnabled(m_ga == nullptr && m_runMergeXML == 0);
@@ -792,7 +792,7 @@ void MainWindow::activateButtons()
     ui->lineEditWorkingFolder->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->lineEditMergeXMLFile->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->lineEditGaitSymExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
-    ui->lineEditMergeScriptExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
+    ui->lineEditPostMergeScript->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->lineEditGAExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0);
     ui->lineEditCurrentLoopCount->setEnabled(ui->checkBoxMergeXMLActivate->isChecked());
     ui->lineEditCurrentLoopValue->setEnabled(ui->checkBoxMergeXMLActivate->isChecked());

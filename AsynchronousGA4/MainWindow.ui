@@ -141,14 +141,14 @@
         <widget class="QLineEdit" name="lineEditWorkingFolder"/>
        </item>
        <item row="5" column="0">
-        <widget class="QPushButton" name="pushButtonMergeScriptExecutable">
+        <widget class="QPushButton" name="pushButtonPostMergeScript">
          <property name="text">
-          <string>Merge Executable...</string>
+          <string>Post Merge Script...</string>
          </property>
         </widget>
        </item>
        <item row="5" column="1">
-        <widget class="QLineEdit" name="lineEditMergeScriptExecutable"/>
+        <widget class="QLineEdit" name="lineEditPostMergeScript"/>
        </item>
       </layout>
      </widget>

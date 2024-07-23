@@ -54,7 +54,7 @@ public slots:
     void pushButtonWorkingFolderClicked();
     void pushButtonMergeXMLFileClicked();
     void pushButtonGaitSymExecutableClicked();
-    void pushButtonMergeScriptExecutableClicked();
+    void pushButtonPostMergeScriptClicked();
     void pushButtonGAExecutableClicked();
     void pushButtonStartClicked();
     void pushButtonStopClicked();
@@ -70,7 +70,7 @@ public slots:
     void lineEditMergeXMLFileTextChanged(const QString &text);
     void lineEditWorkingFolderTextChanged(const QString &text);
     void lineEditGaitSymExecutableTextChanged(const QString &text);
-    void lineEditMergeScriptExecutableTextChanged(const QString &text);
+    void lineEditPostMergeScriptTextChanged(const QString &text);
     void lineEditGAExecutableTextChanged(const QString &text);
     void checkBoxStateChanged(int state);
     void spinBoxLogLevelTextChanged(const QString &text);
