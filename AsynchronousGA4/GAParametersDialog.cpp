@@ -7,9 +7,6 @@
 #include <QFile>
 #include <QDomDocument>
 
-#include <vector>
-#include <string>
-
 GAParametersDialog::GAParametersDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::GAParametersDialog)
@@ -20,10 +17,16 @@ GAParametersDialog::GAParametersDialog(QWidget *parent) :
     connect(ui->pushButtonCancel, &QPushButton::clicked, this, &GAParametersDialog::reject);
     connect(ui->pushButtonOK, &QPushButton::clicked, this, &GAParametersDialog::accept);
 
-    // force a button enable check when tbne combo boxes are altered (since they can have invalid values
-    QList<QComboBox *> listQComboBox = this->findChildren<QComboBox *>(QString(), Qt::FindChildrenRecursively);
-    for (auto &&it : listQComboBox) { connect(it, &QComboBox::currentIndexChanged, this, &GAParametersDialog::activateButtons); }
-    activateButtons();
+    // initialise the combo boxes
+    QStringList crossoverType = {"OnePoint", "Average"};
+    QStringList parentSelection = {"UniformSelection", "RankBasedSelection", "SqrtBasedSelection", "GammaBasedSelection"};
+    QStringList resizeControl = {"RandomiseResize", "MutateResize"};
+    for (auto &&it : crossoverType) ui->comboBoxCrossoverType->addItem(it);
+    for (auto &&it : parentSelection) ui->comboBoxParentSelection->addItem(it);
+    for (auto &&it : resizeControl) ui->comboBoxResizeControl->addItem(it);
+    ui->comboBoxCrossoverType->setCurrentIndex(0);
+    ui->comboBoxParentSelection->setCurrentIndex(0);
+    ui->comboBoxResizeControl->setCurrentIndex(0);
 
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "AnimalSimulationLaboratory", "AsynchronousGA4");
     restoreGeometry(settings.value("GAParametersDialogGeometry").toByteArray());
@@ -92,8 +95,13 @@ QString GAParametersDialog::editorText() const
 void GAParametersDialog::setEditorText(const QString &newEditorText)
 {
     QDomDocument doc;
+    if (!doc.setContent(newEditorText)) return;
+    QString doctype = doc.doctype().name();
+    qDebug() << "doctype" << doctype;
     QDomElement docElem = doc.documentElement();
-    if (docElem.tagName() != "ASYNCHRONOUSGA") return;
+    QString docElemTag = docElem.tagName();
+    qDebug() << "docElemTag" << docElemTag;
+    if (docElemTag != "ASYNCHRONOUSGA") return;
     QDomNode n = docElem.firstChild();
     while(!n.isNull())
     {
@@ -102,38 +110,17 @@ void GAParametersDialog::setEditorText(const QString &newEditorText)
         {
             if (e.tagName() == "GAPARAMETERS")
             {
-                static const std::vector<std::string> crossoverType = {"OnePoint", "Average"};
-                static const std::vector<std::string> parentSelection = {"UniformSelection", "RankBasedSelection", "SqrtBasedSelection", "GammaBasedSelection"};
-                static const std::vector<std::string> resizeControl = {"RandomiseResize", "MutateResize"};
-
-                std::string stringV;
+                QString stringV;
                 int index;
-                stringV = e.attribute("crossoverType").toStdString();
-                index = -1;
-                for (size_t i = 0; i < crossoverType.size(); i++)
-                {
-                    ui->comboBoxCrossoverType->addItem(QString::fromStdString(crossoverType[i]));
-                    if (crossoverType[i] == stringV) index = int(i);
-                }
-                ui->comboBoxCrossoverType->setCurrentIndex(index);
-
-                stringV = e.attribute("resizeControl").toStdString();
-                index = -1;
-                for (size_t i = 0; i < resizeControl.size(); i++)
-                {
-                    ui->comboBoxResizeControl->addItem(QString::fromStdString(resizeControl[i]));
-                    if (resizeControl[i] == stringV) index = int(i);
-                }
-                ui->comboBoxResizeControl->setCurrentIndex(index);
-
-                stringV = e.attribute("parentSelection").toStdString();
-                index = -1;
-                for (size_t i = 0; i < parentSelection.size(); i++)
-                {
-                    ui->comboBoxParentSelection->addItem(QString::fromStdString(parentSelection[i]));
-                    if (parentSelection[i] == stringV) index = int(i);
-                }
-                ui->comboBoxParentSelection->setCurrentIndex(index);
+                stringV = e.attribute("crossoverType");
+                index = ui->comboBoxCrossoverType->findText(stringV);
+                if (index >= 0) ui->comboBoxCrossoverType->setCurrentIndex(index);
+                stringV = e.attribute("resizeControl");
+                index = ui->comboBoxResizeControl->findText(stringV);
+                if (index >= 0) ui->comboBoxResizeControl->setCurrentIndex(index);
+                stringV = e.attribute("parentSelection");
+                index = ui->comboBoxParentSelection->findText(stringV);
+                if (index >= 0) ui->comboBoxParentSelection->setCurrentIndex(index);
 
                 bool boolV;
                 boolV = e.attribute("bounceMutation").toInt();
@@ -192,16 +179,4 @@ void GAParametersDialog::setEditorText(const QString &newEditorText)
         n = n.nextSibling();
     }
 
-}
-
-void GAParametersDialog::activateButtons()
-{
-    if (ui->comboBoxCrossoverType->currentIndex() == -1 || ui->comboBoxParentSelection->currentIndex() == -1 || ui->comboBoxResizeControl->currentIndex() == -1)
-    {
-        ui->pushButtonOK->setEnabled(false);
-    }
-    else
-    {
-        ui->pushButtonOK->setEnabled(true);
-    }
 }

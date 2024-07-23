@@ -18,9 +18,6 @@ public:
     QString editorText() const;
     void setEditorText(const QString &newEditorText);
 
-private slots:
-    void activateButtons();
-
 protected:
     void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
 
