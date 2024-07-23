@@ -1150,6 +1150,7 @@ void MainWindow::openFile(const QString &fileName)
                 ui->lineEditWorkingFolder->setText(convertToAbsolutePath(e.attribute("workingFolder")));
                 ui->lineEditMergeXMLFile->setText(convertToAbsolutePath(e.attribute("mergeXMLFile")));
                 ui->lineEditGaitSymExecutable->setText(convertToAbsolutePath(e.attribute("gaitSymExecutable")));
+                ui->lineEditPostMergeScript->setText(convertToAbsolutePath(e.attribute("postMergeScript")));
                 ui->lineEditGAExecutable->setText(convertToAbsolutePath(e.attribute("gaExecutable")));
                 ui->spinBoxLogLevel->setValue(e.attribute("logLevel").toInt());
                 ui->spinBoxPort->setValue(e.attribute("portNumber").toInt());
@@ -1160,8 +1161,8 @@ void MainWindow::openFile(const QString &fileName)
                 ui->checkBoxMergeXMLActivate->setChecked(QVariant(e.attribute("mergeXMLActivate")).toBool());
                 ui->checkBoxCycleTime->setChecked(QVariant(e.attribute("cycle")).toBool());
 
-                m_startExpressionMarker = e.attribute("startExpressionMarker", "[[").toStdString();
-                m_endExpressionMarker = e.attribute("endExpressionMarker", "]]").toStdString();
+                m_startExpressionMarker = e.attribute("startExpressionMarker", "{{").toStdString();
+                m_endExpressionMarker = e.attribute("endExpressionMarker", "}}").toStdString();
             }
         }
         n = n.nextSibling();
@@ -1205,6 +1206,7 @@ void MainWindow::save()
     dataItemsElement.setAttribute("workingFolder", convertToRelativePath(ui->lineEditWorkingFolder->text()));
     dataItemsElement.setAttribute("mergeXMLFile", convertToRelativePath(ui->lineEditMergeXMLFile->text()));
     dataItemsElement.setAttribute("gaitSymExecutable", convertToRelativePath(ui->lineEditGaitSymExecutable->text()));
+    dataItemsElement.setAttribute("postMergeScript", convertToRelativePath(ui->lineEditPostMergeScript->text()));
     dataItemsElement.setAttribute("gaExecutable", convertToRelativePath(ui->lineEditGAExecutable->text()));
     dataItemsElement.setAttribute("logLevel", ui->spinBoxLogLevel->text());
     dataItemsElement.setAttribute("portNumber", ui->spinBoxPort->text());
