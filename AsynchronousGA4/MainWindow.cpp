@@ -1,7 +1,7 @@
 #include "MainWindow.h"
 #include "./ui_MainWindow.h"
 
-#include "Utilities.h"
+#include "MergeUtil.h"
 #include "TextEditDialog.h"
 #include "GAParametersDialog.h"
 #include "MergeXML.h"
@@ -516,7 +516,7 @@ void MainWindow::runPostMergeScript()
 
     QFileInfo mergeScriptExecutableInfo(mergeScriptExecutable);
     bool mergeScriptExecutableValid = false;
-    if (mergeScriptExecutableInfo.exists() && mergeScriptExecutableInfo.isFile() && mergeScriptExecutableInfo.isExecutable()) mergeScriptExecutableValid = true;
+    if (mergeScriptExecutableInfo.exists() && mergeScriptExecutableInfo.isFile()) mergeScriptExecutableValid = true;
     if (!mergeScriptExecutableValid)
     {
         tryToStopGA();
@@ -527,20 +527,42 @@ void MainWindow::runPostMergeScript()
         return;
     }
     QStringList arguments;
-    arguments << "--startingPopulationFile" << ui->lineEditStartingPopulationFile->text()
-              << "--xmlMasterFile" << ui->lineEditXMLMasterFile->text()
-              << "--lineEditOutputFolder" << ui->lineEditOutputFolder->text();
     QProcess mergeScript;
-    mergeScript.start(mergeScriptExecutable, arguments);
-    if (!mergeScript.waitForStarted())
+    QString interpreter;
+    if (mergeScriptExecutableInfo.isExecutable())
     {
-        tryToStopGA();
-        m_mergeXMLTimer->stop();
-        m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("runPostMergeScript: Unable to start \"%1\"").arg(mergeScriptExecutable));
-        QMessageBox::warning(this, tr("Run Post Merge Script Error"), QString("runPostMergeScript: Unable to start \"%1\"").arg(mergeScriptExecutable));
-        return;
+        arguments << "--startingPopulationFile" << ui->lineEditStartingPopulationFile->text()
+                  << "--xmlMasterFile" << ui->lineEditXMLMasterFile->text()
+                  << "--lineEditOutputFolder" << ui->lineEditOutputFolder->text();
+        mergeScript.start(mergeScriptExecutable, arguments);
     }
+    else
+    {
+        if (mergeScriptExecutable.endsWith(".py", Qt::CaseInsensitive))
+        {
+            interpreter = existsOnPath("python");
+            if (interpreter.isEmpty()) { interpreter = existsOnPath("python3"); }
+        }
+        if (mergeScriptExecutable.endsWith(".r", Qt::CaseInsensitive))
+        {
+            interpreter = existsOnPath("Rscript");
+        }
+        if (interpreter.isEmpty())
+        {
+            tryToStopGA();
+            m_mergeXMLTimer->stop();
+            m_runMergeXML = 0;
+            if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("runPostMergeScript: Unknown script \"%1\"").arg(mergeScriptExecutable));
+            QMessageBox::warning(this, tr("Run Post Merge Script Error"), QString("runPostMergeScript: Unknown script \"%1\"").arg(mergeScriptExecutable));
+            return;
+        }
+        arguments << mergeScriptExecutable
+                  << "--startingPopulationFile" << ui->lineEditStartingPopulationFile->text()
+                  << "--xmlMasterFile" << ui->lineEditXMLMasterFile->text()
+                  << "--lineEditOutputFolder" << ui->lineEditOutputFolder->text();
+        mergeScript.start(interpreter, arguments);
+    }
+
     int msecs = 60 * 60 * 1000; // FIX ME - this should be user settable
     if (!mergeScript.waitForFinished(msecs)) // this should work although if mergeScript finished really quickly it is not guaranteed
     {
@@ -655,7 +677,7 @@ void MainWindow::handleFinished()
     }
     int result = m_ga->exitCode();
     int exitStatus = m_ga->exitStatus();
-    appendProgress(QString::fromStdString(Utilities::toString("handleFinished exitCode = %d exitStatus = %d", result, exitStatus)));
+    appendProgress(QString::fromStdString(MergeUtil::toString("handleFinished exitCode = %d exitStatus = %d", result, exitStatus)));
     delete m_ga;
     m_ga = nullptr;
     if (result == 0 && exitStatus == 0)
@@ -749,7 +771,7 @@ void MainWindow::lineEditGAExecutableTextChanged(const QString & /*text*/)
 void MainWindow::spinBoxLogLevelTextChanged(const QString & /*text*/)
 {
 #if (!defined(WIN32) && ! defined(_WIN32)) || true
-    std::string instruction = Utilities::toString("log%d\n", ui->spinBoxLogLevel->value());
+    std::string instruction = MergeUtil::toString("log%d\n", ui->spinBoxLogLevel->value());
     if (m_ga) m_ga->write(instruction.c_str(), instruction.size());
 #endif
     m_asynchronousGAFileModified = true;
@@ -821,7 +843,7 @@ void MainWindow::activateButtons()
         if (!ui->lineEditGaitSymExecutable->text().isEmpty())
         {
             QFileInfo mergeScriptExecutableInfo(ui->lineEditGaitSymExecutable->text());
-            if (!mergeScriptExecutableInfo.exists() || !mergeScriptExecutableInfo.isFile() || !mergeScriptExecutableInfo.isExecutable()) mergeScriptExecutableValid = false;
+            if (!mergeScriptExecutableInfo.exists() || !mergeScriptExecutableInfo.isFile()) mergeScriptExecutableValid = false;
         }
         ui->pushButtonStart->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && !ui->lineEditModelConfigurationFile->text().isEmpty() &&
                                         !ui->lineEditModelPopulationFile->text().isEmpty() && !ui->lineEditDriverFile->text().isEmpty() &&
@@ -1224,6 +1246,19 @@ QString MainWindow::convertToAbsolutePath(const QString &filename)
     QDir dir = fileInfo.absoluteDir();
     QString relativePath = QDir::cleanPath(dir.absoluteFilePath(filename));
     return relativePath;
+}
+
+QString MainWindow::existsOnPath(const QString &filename)
+{
+    QString path = qEnvironmentVariable("PATH");
+    QStringList pathFolders = path.split(':');
+    for (auto &&pathFolder : pathFolders)
+    {
+        QString testFile = QDir(pathFolder).absoluteFilePath(filename);
+        QFileInfo testFileInfo(testFile);
+        if (testFileInfo.exists() && testFileInfo.isExecutable()) return testFile;
+    }
+    return QString();
 }
 
 void MainWindow::editSettings()

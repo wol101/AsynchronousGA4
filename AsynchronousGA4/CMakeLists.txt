@@ -18,7 +18,6 @@ set(PROJECT_SOURCES
     MainWindow.cpp
     MergeXML.cpp
     TextEditDialog.cpp
-    Utilities.cpp
     XMLContainer.cpp
     XMLContainerList.cpp
     main.cpp
@@ -31,7 +30,6 @@ set(PROJECT_SOURCES
     TextEditDialog.h
     XMLContainer.h
     XMLContainerList.h
-    Utilities.h
 
     GAParametersDialog.ui
     MainWindow.ui

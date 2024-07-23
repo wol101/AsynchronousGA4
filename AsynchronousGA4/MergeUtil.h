@@ -12,7 +12,9 @@
 #ifndef __MergeUtil_H__
 #define __MergeUtil_H__
 
+#include <cstdarg>
 #include <math.h>
+#include <memory>
 #include <stdlib.h>
 #include <string>
 
@@ -271,44 +273,29 @@ inline static void Strip(char *str)
     return;
 }
 
-// return the index of a matching item in a sorted array
-template <class T> inline static int BinarySearchMatch
-(T array[ ], int listlen, T item)
+
+// convert to string using printf style formatting and variable numbers of arguments
+inline static std::string toString(const char * const printfFormatString, ...)
 {
-    int first = 0;
-    int last = listlen-1;
-    int mid;
-    while (first <= last)
-    {
-        mid = (first + last) / 2;
-        if (array[mid] < item) first = mid + 1;
-        else if (array[mid] > item) last = mid - 1;
-        else return mid;
-    }
+    // initialize use of the variable argument array
+    va_list vaArgs;
+    va_start(vaArgs, printfFormatString);
 
-    return -1;
+    // reliably acquire the size
+    // from a copy of the variable argument array
+    // and a functionally reliable call to mock the formatting
+    va_list vaArgsCopy;
+    va_copy(vaArgsCopy, vaArgs);
+    const int iLen = std::vsnprintf(nullptr, 0, printfFormatString, vaArgsCopy);
+    va_end(vaArgsCopy);
+
+    // return a formatted string without risking memory mismanagement
+    // and without assuming any compiler or platform specific behavior
+    std::unique_ptr<char[]> zc = std::make_unique<char[]>(iLen + 1);
+    std::vsnprintf(zc.get(), size_t(iLen + 1), printfFormatString, vaArgs);
+    va_end(vaArgs);
+    return std::string(zc.get(), size_t(iLen));
 }
-
-// return the index of a matching item in a sorted array
-// special case when I'm searching for a range rather than an exact match
-// returns the index of array[index] <= item < array[index+1]
-// UNTESTED!!!!
-template <class T> inline static int BinarySearchRange
-(T array[ ], int listlen, T item)
-{
-    int first = 0;
-    int last = listlen-1;
-    int mid;
-    while (first <= last)
-    {
-        mid = (first + last) / 2;
-        if (array[mid + 1] <= item) first = mid + 1;
-        else if (array[mid] > item) last = mid - 1;
-        else return mid;
-    }
-    return -1;
-}
-
 
 };
 
