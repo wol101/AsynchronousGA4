@@ -1653,6 +1653,48 @@ size_t DataFile::Replace(std::string *s, std::string const &toReplace, std::stri
     return count;
 }
 
+// returns the value of an [attribute="value"] element
+// returns false on success
+bool DataFile::RetrieveAttribute(const char * const attrib, std::string *val)
+{
+    std::string target(attrib);
+    target.append("=\"");
+    char *startPtr = strstr(m_fileData.get(), target.c_str());
+    if (startPtr == nullptr) return true;
+    char *endPtr = strstr(startPtr, "\"");
+    if (endPtr == nullptr) return true;
+    val->assign(startPtr, endPtr);
+    return false;
+}
+
+bool DataFile::RetrieveAttribute(const char * const attrib, double *val)
+{
+    std::string s;
+    if (RetrieveAttribute(attrib, &s)) return true;
+    *val = std::stod(s);
+    return false;
+}
+
+bool DataFile::RetrieveAttribute(const char * const attrib, int *val)
+{
+    std::string s;
+    if (RetrieveAttribute(attrib, &s)) return true;
+    *val = std::stoi(s);
+    return false;
+}
+
+bool DataFile::RetrieveAttribute(const char * const attrib, bool *val)
+{
+    std::string s;
+    if (RetrieveAttribute(attrib, &s)) return true;
+    Strip(s.data());
+    static const std::vector<std::string> falseWords{"0", "false", "no"};
+    static const std::vector<std::string> trueWords{"1", "true", "yes"};
+    for (size_t i = 0; i < falseWords.size(); i++) { if (strcasecmp(falseWords[i].c_str(), s.c_str()) == 0) { *val = false; return false; } }
+    for (size_t i = 0; i < trueWords.size(); i++) { if (strcasecmp(trueWords[i].c_str(), s.c_str()) == 0) { *val = true; return false; } }
+    return true;
+}
+
 std::wstring DataFile::ConvertUTF8ToWide(const std::string& str)
 {
 #if defined(WIN32) || defined(_WIN32) // std::codecvt_utf8_utf16 and codecvt_utf8_utf16 are deprecated in C++17 and not recommended in MSCV

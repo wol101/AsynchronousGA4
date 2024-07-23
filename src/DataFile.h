@@ -42,6 +42,12 @@ public:
     bool RetrieveQuotedStringParameter(const char * const param, char **val, size_t *size, bool searchFromStart = true);
     bool RetrieveQuotedStringParameter(const char * const param, std::string *val, bool searchFromStart = true);
 
+    // these retrieve values encoded like XML attributes
+    bool RetrieveAttribute(const char * const attrib, int *val);
+    bool RetrieveAttribute(const char * const attrib, double *val);
+    bool RetrieveAttribute(const char * const attrib, bool *val);
+    bool RetrieveAttribute(const char * const attrib, std::string *val);
+
     // ranged functions
     // the file is searched for the parameter and then the next token is read
     bool RetrieveRangedParameter(const char * const param, double *val, bool searchFromStart = true);

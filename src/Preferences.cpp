@@ -28,51 +28,51 @@ int Preferences::ReadPreferences(const std::string &filename)
         if (params.ReadFile(filename)) throw __LINE__;
 
         // essential parameters
-        if (params.RetrieveParameter("genomeLength", &genomeLength)) throw __LINE__;
-        if (params.RetrieveParameter("populationSize", &populationSize)) throw __LINE__;
-        if (params.RetrieveParameter("maxReproductions", &maxReproductions)) throw __LINE__;
-        if (params.RetrieveParameter("gaussianMutationChance", &gaussianMutationChance)) throw __LINE__;
-        if (params.RetrieveParameter("frameShiftMutationChance", &frameShiftMutationChance)) throw __LINE__;
-        if (params.RetrieveParameter("duplicationMutationChance", &duplicationMutationChance)) throw __LINE__;
-        if (params.RetrieveParameter("crossoverChance", &crossoverChance)) throw __LINE__;
-        if (params.RetrieveParameter("parentsToKeep", &parentsToKeep)) throw __LINE__;
-        if (params.RetrieveParameter("saveBestEvery", &saveBestEvery)) throw __LINE__;
-        if (params.RetrieveParameter("savePopEvery", &savePopEvery)) throw __LINE__;
-        if (params.RetrieveParameter("outputStatsEvery", &outputStatsEvery)) throw __LINE__;
-        if (params.RetrieveParameter("onlyKeepBestGenome", &onlyKeepBestGenome)) throw __LINE__;
-        if (params.RetrieveParameter("onlyKeepBestPopulation", &onlyKeepBestPopulation)) throw __LINE__;
-        if (params.RetrieveParameter("improvementReproductions", &improvementReproductions)) throw __LINE__;
-        if (params.RetrieveParameter("improvementThreshold", &improvementThreshold)) throw __LINE__;
-        if (params.RetrieveParameter("multipleGaussian", &multipleGaussian)) throw __LINE__;
-        if (params.RetrieveParameter("randomiseModel", &randomiseModel)) throw __LINE__;
-        if (params.RetrieveParameter("outputPopulationSize", &outputPopulationSize)) throw __LINE__;
-        if (params.RetrieveParameter("watchDogTimerLimit", &watchDogTimerLimit)) throw __LINE__;
+        if (params.RetrieveAttribute("genomeLength", &genomeLength)) throw __LINE__;
+        if (params.RetrieveAttribute("populationSize", &populationSize)) throw __LINE__;
+        if (params.RetrieveAttribute("maxReproductions", &maxReproductions)) throw __LINE__;
+        if (params.RetrieveAttribute("gaussianMutationChance", &gaussianMutationChance)) throw __LINE__;
+        if (params.RetrieveAttribute("frameShiftMutationChance", &frameShiftMutationChance)) throw __LINE__;
+        if (params.RetrieveAttribute("duplicationMutationChance", &duplicationMutationChance)) throw __LINE__;
+        if (params.RetrieveAttribute("crossoverChance", &crossoverChance)) throw __LINE__;
+        if (params.RetrieveAttribute("parentsToKeep", &parentsToKeep)) throw __LINE__;
+        if (params.RetrieveAttribute("saveBestEvery", &saveBestEvery)) throw __LINE__;
+        if (params.RetrieveAttribute("savePopEvery", &savePopEvery)) throw __LINE__;
+        if (params.RetrieveAttribute("outputStatsEvery", &outputStatsEvery)) throw __LINE__;
+        if (params.RetrieveAttribute("onlyKeepBestGenome", &onlyKeepBestGenome)) throw __LINE__;
+        if (params.RetrieveAttribute("onlyKeepBestPopulation", &onlyKeepBestPopulation)) throw __LINE__;
+        if (params.RetrieveAttribute("improvementReproductions", &improvementReproductions)) throw __LINE__;
+        if (params.RetrieveAttribute("improvementThreshold", &improvementThreshold)) throw __LINE__;
+        if (params.RetrieveAttribute("multipleGaussian", &multipleGaussian)) throw __LINE__;
+        if (params.RetrieveAttribute("randomiseModel", &randomiseModel)) throw __LINE__;
+        if (params.RetrieveAttribute("outputPopulationSize", &outputPopulationSize)) throw __LINE__;
+        if (params.RetrieveAttribute("watchDogTimerLimit", &watchDogTimerLimit)) throw __LINE__;
 
-        if (params.RetrieveParameter("parentSelection", &paramsBuffer)) throw __LINE__;
+        if (params.RetrieveAttribute("parentSelection", &paramsBuffer)) throw __LINE__;
         if (paramsBuffer == "UniformSelection"s) parentSelection = UniformSelection;
         else if (paramsBuffer == "RankBasedSelection"s) parentSelection = RankBasedSelection;
         else if (paramsBuffer == "SqrtBasedSelection"s) parentSelection = SqrtBasedSelection;
         else if (paramsBuffer == "GammaBasedSelection"s) parentSelection = GammaBasedSelection;
         else throw __LINE__;
 
-        if (params.RetrieveParameter("gamma", &gamma)) throw __LINE__;
+        if (params.RetrieveAttribute("gamma", &gamma)) throw __LINE__;
 
-        if (params.RetrieveParameter("crossoverType", &paramsBuffer)) throw __LINE__;
+        if (params.RetrieveAttribute("crossoverType", &paramsBuffer)) throw __LINE__;
         if (paramsBuffer == "OnePoint"s) crossoverType = Mating::OnePoint;
         else if (paramsBuffer == "Average"s) crossoverType = Mating::Average;
         else throw __LINE__;
 
-        if (params.RetrieveParameter("circularMutation", &circularMutation)) throw __LINE__;
-        if (params.RetrieveParameter("bounceMutation", &bounceMutation)) throw __LINE__;
-        if (params.RetrieveParameter("minimizeScore", &minimizeScore)) throw __LINE__;
+        if (params.RetrieveAttribute("circularMutation", &circularMutation)) throw __LINE__;
+        if (params.RetrieveAttribute("bounceMutation", &bounceMutation)) throw __LINE__;
+        if (params.RetrieveAttribute("minimizeScore", &minimizeScore)) throw __LINE__;
 
-        if (params.RetrieveParameter("resizeControl", &paramsBuffer)) throw __LINE__;
+        if (params.RetrieveAttribute("resizeControl", &paramsBuffer)) throw __LINE__;
         if (paramsBuffer == "RandomiseResize"s) resizeControl = RandomiseResize;
         else if (paramsBuffer == "MutateResize"s) resizeControl = MutateResize;
         else throw __LINE__;
 
         // optional parameters
-        params.RetrieveParameter("startingPopulation", &startingPopulation);
+        params.RetrieveAttribute("startingPopulation", &startingPopulation);
 
     }
 
