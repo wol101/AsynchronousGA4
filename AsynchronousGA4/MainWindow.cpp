@@ -502,15 +502,18 @@ void MainWindow::runMergeXML()
     QString newPopulation = QDir(outputFolder).filePath("workingPopulation.txt");
     QFile::copy(lastPopulation, newPopulation);
     ui->lineEditStartingPopulationFile->setText(newPopulation);
+    runPostMergeScript();
     runGA();
 }
 
 void MainWindow::runPostMergeScript()
 {
-    if (ui->spinBoxLogLevel->value() > 0) appendProgress("Running Merge Script");
-    ui->statusBar->showMessage("Running Merge Script");
-
     QString mergeScriptExecutable = ui->lineEditMergeScriptExecutable->text();
+    if (mergeScriptExecutable.isEmpty()) return;
+
+    if (ui->spinBoxLogLevel->value() > 0) appendProgress("Running Post Merge Script");
+    ui->statusBar->showMessage("Running Post Merge Script");
+
     QFileInfo mergeScriptExecutableInfo(mergeScriptExecutable);
     bool mergeScriptExecutableValid = false;
     if (mergeScriptExecutableInfo.exists() && mergeScriptExecutableInfo.isFile() && mergeScriptExecutableInfo.isExecutable()) mergeScriptExecutableValid = true;
@@ -519,11 +522,14 @@ void MainWindow::runPostMergeScript()
         tryToStopGA();
         m_mergeXMLTimer->stop();
         m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("runMergeScript: Unable to find \"%1\"").arg(mergeScriptExecutable));
-        QMessageBox::warning(this, tr("Run Merge Script Error"), QString("runMergeScript: Unable to find \"%1\"").arg(mergeScriptExecutable));
+        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("runPostMergeScript: Unable to find \"%1\"").arg(mergeScriptExecutable));
+        QMessageBox::warning(this, tr("Run Post Merge Script Error"), QString("runPostMergeScript: Unable to find \"%1\"").arg(mergeScriptExecutable));
         return;
     }
     QStringList arguments;
+    arguments << "--startingPopulationFile" << ui->lineEditStartingPopulationFile->text()
+              << "--xmlMasterFile" << ui->lineEditXMLMasterFile->text()
+              << "--lineEditOutputFolder" << ui->lineEditOutputFolder->text();
     QProcess mergeScript;
     mergeScript.start(mergeScriptExecutable, arguments);
     if (!mergeScript.waitForStarted())
@@ -531,18 +537,18 @@ void MainWindow::runPostMergeScript()
         tryToStopGA();
         m_mergeXMLTimer->stop();
         m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("runMergeScript: Unable to start \"%1\"").arg(mergeScriptExecutable));
-        QMessageBox::warning(this, tr("Run Merge Script Error"), QString("runMergeScript: Unable to start \"%1\"").arg(mergeScriptExecutable));
+        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("runPostMergeScript: Unable to start \"%1\"").arg(mergeScriptExecutable));
+        QMessageBox::warning(this, tr("Run Post Merge Script Error"), QString("runPostMergeScript: Unable to start \"%1\"").arg(mergeScriptExecutable));
         return;
     }
-    int msecs = 60 * 60 * 1000;
+    int msecs = 60 * 60 * 1000; // FIX ME - this should be user settable
     if (!mergeScript.waitForFinished(msecs)) // this should work although if mergeScript finished really quickly it is not guaranteed
     {
         tryToStopGA();
         m_mergeXMLTimer->stop();
         m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("runMergeScript: Timeout \"%1\"").arg(mergeScriptExecutable));
-        QMessageBox::warning(this, tr("Run Merge Script Error"), QString("runMergeScript: Timeout \"%1\"").arg(mergeScriptExecutable));
+        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("runPostMergeScript: Timeout \"%1\"").arg(mergeScriptExecutable));
+        QMessageBox::warning(this, tr("Run Post Merge Script Error"), QString("runPostMergeScript: Timeout \"%1\"").arg(mergeScriptExecutable));
         return;
     }
     QByteArray stdOut = mergeScript.readAllStandardOutput();
@@ -811,9 +817,12 @@ void MainWindow::activateButtons()
         bool gaitSymExecutableValid = false;
         QFileInfo gaitSymExecutableInfo(ui->lineEditGaitSymExecutable->text());
         if (gaitSymExecutableInfo.exists() && gaitSymExecutableInfo.isFile() && gaitSymExecutableInfo.isExecutable()) gaitSymExecutableValid = true;
-        bool mergeScriptExecutableValid = false;
-        QFileInfo mergeScriptExecutableInfo(ui->lineEditGaitSymExecutable->text());
-        if (mergeScriptExecutableInfo.exists() && mergeScriptExecutableInfo.isFile() && mergeScriptExecutableInfo.isExecutable()) mergeScriptExecutableValid = true;
+        bool mergeScriptExecutableValid = true;
+        if (!ui->lineEditGaitSymExecutable->text().isEmpty())
+        {
+            QFileInfo mergeScriptExecutableInfo(ui->lineEditGaitSymExecutable->text());
+            if (!mergeScriptExecutableInfo.exists() || !mergeScriptExecutableInfo.isFile() || !mergeScriptExecutableInfo.isExecutable()) mergeScriptExecutableValid = false;
+        }
         ui->pushButtonStart->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && !ui->lineEditModelConfigurationFile->text().isEmpty() &&
                                         !ui->lineEditModelPopulationFile->text().isEmpty() && !ui->lineEditDriverFile->text().isEmpty() &&
                                         !ui->lineEditMergeXMLFile->text().isEmpty() && gaExecutableValid && gaitSymExecutableValid && mergeScriptExecutableValid);

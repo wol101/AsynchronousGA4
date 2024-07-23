@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1067</width>
-    <height>892</height>
+    <height>666</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,105 +23,63 @@
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0">
         <widget class="QPushButton" name="pushButtonParameterFile">
-         <property name="toolTip">
-          <string>Required</string>
-         </property>
          <property name="text">
           <string>Parameter File...</string>
          </property>
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="lineEditParameterFile">
-         <property name="toolTip">
-          <string>Required</string>
-         </property>
-        </widget>
+        <widget class="QLineEdit" name="lineEditParameterFile"/>
        </item>
        <item row="1" column="0">
         <widget class="QPushButton" name="pushButtonStartingPopulationFile">
-         <property name="toolTip">
-          <string>Optional</string>
-         </property>
          <property name="text">
           <string>Starting Population File...</string>
          </property>
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLineEdit" name="lineEditStartingPopulationFile">
-         <property name="toolTip">
-          <string>Optional</string>
-         </property>
-        </widget>
+        <widget class="QLineEdit" name="lineEditStartingPopulationFile"/>
        </item>
        <item row="2" column="0">
         <widget class="QPushButton" name="pushButtonXMLMasterFile">
-         <property name="toolTip">
-          <string>Required</string>
-         </property>
          <property name="text">
           <string>XML Master File...</string>
          </property>
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QLineEdit" name="lineEditXMLMasterFile">
-         <property name="toolTip">
-          <string>Required</string>
-         </property>
-        </widget>
+        <widget class="QLineEdit" name="lineEditXMLMasterFile"/>
        </item>
        <item row="3" column="0">
         <widget class="QPushButton" name="pushButtonOutputFolder">
-         <property name="toolTip">
-          <string>Optional</string>
-         </property>
          <property name="text">
           <string>Output Folder...</string>
          </property>
         </widget>
        </item>
        <item row="3" column="1">
-        <widget class="QLineEdit" name="lineEditOutputFolder">
-         <property name="toolTip">
-          <string>Optional</string>
-         </property>
-        </widget>
+        <widget class="QLineEdit" name="lineEditOutputFolder"/>
        </item>
        <item row="4" column="0">
         <widget class="QPushButton" name="pushButtonGaitSymExecutable">
-         <property name="toolTip">
-          <string>Optional</string>
-         </property>
          <property name="text">
           <string>GaitSym Executable...</string>
          </property>
         </widget>
        </item>
        <item row="4" column="1">
-        <widget class="QLineEdit" name="lineEditGaitSymExecutable">
-         <property name="toolTip">
-          <string>Optional</string>
-         </property>
-        </widget>
+        <widget class="QLineEdit" name="lineEditGaitSymExecutable"/>
        </item>
        <item row="5" column="0">
         <widget class="QPushButton" name="pushButtonGAExecutable">
-         <property name="toolTip">
-          <string>Optional</string>
-         </property>
          <property name="text">
           <string>GA Executable...</string>
          </property>
         </widget>
        </item>
        <item row="5" column="1">
-        <widget class="QLineEdit" name="lineEditGAExecutable">
-         <property name="toolTip">
-          <string>Optional</string>
-         </property>
-        </widget>
+        <widget class="QLineEdit" name="lineEditGAExecutable"/>
        </item>
       </layout>
      </widget>
