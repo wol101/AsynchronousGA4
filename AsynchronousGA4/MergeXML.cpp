@@ -19,6 +19,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <regex>
 
 using namespace std::string_literals;
 
@@ -29,18 +30,6 @@ MergeXML::MergeXML()
 // read and execute the instruction file
 void MergeXML::ExecuteInstructionFile(const std::string &bigString)
 {
-
-    // DataFile theFile;
-    // char buffer[32768];
-    // char line[32768];
-    // char *tokens[32768];
-    // int numTokens;
-    // int count = 0;
-    // int rCount;
-
-    // theFile.SetExitOnError(true);
-    // theFile.SetRawData(bigString, strlen(bigString));
-
     // do the global substitution
     std::string instructionString = bigString;
     if (m_oldStringList.size() > 0)
@@ -66,8 +55,22 @@ void MergeXML::ExecuteInstructionFile(const std::string &bigString)
             buffer.push_back(instructionLine[c]);
         }
         std::vector<std::string> tokens;
-        pystring::split(buffer, tokens);
+        std::regex regexExpression("(?:\\\".*?\\\"|\\S)+"); // this will match whitespace delimited objects and leave quoted objects intact
+        std::smatch matchResult;
+        std::string::const_iterator searchStart( buffer.cbegin() );
+        while (std::regex_search(searchStart, buffer.cend(), matchResult, regexExpression))
+        {
+            std::string token = matchResult[0];
+            if (token.size() >= 2 && pystring::startswith(token, "\"") && pystring::endswith(token, "\""))
+            {
+                token.pop_back();
+                token.erase(token.begin());
+            }
+            tokens.push_back(std::move(token));
+            searchStart = matchResult.suffix().first;
+        }
         size_t numTokens = tokens.size();
+        if (numTokens == 0) continue;
 
         if (m_mergeXMLVerbosityLevel > 1)
             std::cerr << "ExecuteInstructionFile:\tnumTokens\t" << numTokens << "\n";

@@ -22,6 +22,7 @@
 #include <fstream>
 #include <sstream>
 #include <string.h>
+#include <filesystem>
 
 using namespace std::string_literals;
 
@@ -41,10 +42,14 @@ int XMLContainer::LoadXML(const std::string &filename)
 
     if (m_doc) delete m_doc;
     m_doc = new rapidxml::xml_document<char>();
+    m_xmlDataStore.clear();
 
-    try {
+    try
+    {
+        std::uintmax_t fileSize = std::filesystem::file_size(filename);
         std::ifstream inputFile(filename, std::ios::binary);
-        std::vector<char> m_xmlDataStore((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
+        m_xmlDataStore.reserve(fileSize + 1);
+        m_xmlDataStore.assign(std::istreambuf_iterator<char>(inputFile), std::istreambuf_iterator<char>());
     }
     catch (...)
     {
