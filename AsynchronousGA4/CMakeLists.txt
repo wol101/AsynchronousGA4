@@ -20,6 +20,7 @@ set(PROJECT_SOURCES
     TextEditDialog.cpp
     XMLContainer.cpp
     XMLContainerList.cpp
+    XMLConverter.cpp
     main.cpp
 
     BasicXMLSyntaxHighlighter.h
@@ -30,6 +31,7 @@ set(PROJECT_SOURCES
     TextEditDialog.h
     XMLContainer.h
     XMLContainerList.h
+    XMLConverter.h
 
     GAParametersDialog.ui
     MainWindow.ui

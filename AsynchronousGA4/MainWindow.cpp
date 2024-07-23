@@ -5,6 +5,7 @@
 #include "TextEditDialog.h"
 #include "GAParametersDialog.h"
 #include "MergeXML.h"
+#include "XMLConverter.h".h"
 
 #include "pystring.h"
 
@@ -599,18 +600,30 @@ void MainWindow::runGaitSym()
     bool cycleFlag = ui->checkBoxCycleTime->isChecked();
     QString outputFolder = ui->lineEditOutputFolder->text();
     QDir dir(outputFolder);
-    QStringList files = dir.entryList(QStringList() << "BestGenome*.xml", QDir::Files, QDir::Name);
+    QStringList files = dir.entryList(QStringList() << "BestGenome*.txt", QDir::Files, QDir::Name);
     if (files.size() < 1)
     {
         tryToStopGA();
         m_mergeXMLTimer->stop();
         m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("runGaitSym: Unable to find BestGenome*.xml"));
-        QMessageBox::warning(this, tr("Run GaitSym Error"), QString("runGaitSym: Unable to find BestGenome*.xml"));
+        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("runGaitSym: Unable to find BestGenome*.txt"));
+        QMessageBox::warning(this, tr("Run GaitSym Error"), QString("runGaitSym: Unable to find BestGenome*.txt"));
         return;
     }
+    QString inputGenome = dir.filePath(files.last());
     QString inputXML = dir.filePath("workingConfig.xml");
-    QString outputXML = dir.filePath(files.last());
+    QFileInfo inputGenomeFile(inputGenome);
+    QString outputXML = dir.filePath(inputGenomeFile.completeBaseName() + QString(".xml"));
+    std::vector<double> genes, lowBounds, highBounds, gaussianSDs;
+    std::vector<int> circularMutationFlags;
+    double fitness;
+    int genomeType;
+    MergeUtil::readGenome(inputGenome.toStdString(), &genes, &lowBounds, &highBounds, &gaussianSDs, &circularMutationFlags, &fitness, &genomeType);
+    XMLConverter xmlConverter;
+    xmlConverter.LoadBaseXMLFile(inputXML.toUtf8());
+    xmlConverter.ApplyGenome(genes);
+    std::string formattedXML;
+    xmlConverter.GetFormattedXML(&formattedXML);
     QString modelStateFileName = dir.filePath("ModelState.xml");
 
     QString gaitSymExecutable = ui->lineEditGaitSymExecutable->text();

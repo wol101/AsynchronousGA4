@@ -17,6 +17,8 @@
 #include <memory>
 #include <stdlib.h>
 #include <string>
+#include <vector>
+#include <fstream>
 
 #ifdef _WIN32
 #include <string.h>
@@ -295,6 +297,47 @@ inline static std::string toString(const char * const printfFormatString, ...)
     std::vsnprintf(zc.get(), size_t(iLen + 1), printfFormatString, vaArgs);
     va_end(vaArgs);
     return std::string(zc.get(), size_t(iLen));
+}
+
+// read a genom
+inline static int readGenome(const std::string &filename, std::vector<double> *genes, std::vector<double> *lowBounds, std::vector<double> *highBounds, std::vector<double> *gaussianSDs, std::vector<int> *circularMutationFlags, double *fitness, int *genomeType)
+{
+    size_t genomeLength;
+    int dummy = 0;
+
+    try
+    {
+        std::ifstream in(filename);
+
+        in >> *genomeType;
+        in >> genomeLength;
+
+        genes->resize(genomeLength);
+        lowBounds->resize(genomeLength);
+        highBounds->resize(genomeLength);
+        gaussianSDs->resize(genomeLength);
+        circularMutationFlags->resize(genomeLength);
+
+        switch (*genomeType)
+        {
+        case -1:
+            for (size_t i = 0; i < genomeLength; i++)
+                in >> (*genes)[i] >> (*lowBounds)[i] >> (*highBounds)[i] >> (*gaussianSDs)[i];
+            in >> *fitness >> dummy >> dummy >> dummy >> dummy;
+            break;
+
+        case -2:
+            for (size_t i = 0; i < genomeLength; i++)
+                in >> (*genes)[i] >> (*lowBounds)[i] >> (*highBounds)[i] >> (*gaussianSDs)[i] >> (*circularMutationFlags)[i];
+            in >> *fitness >> dummy >> dummy >> dummy >> dummy;
+            break;
+        }
+    }
+    catch (...)
+    {
+        return __LINE__;
+    }
+    return 0;
 }
 
 };

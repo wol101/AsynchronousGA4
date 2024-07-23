@@ -9,11 +9,11 @@
 
 #include "XMLContainer.h"
 #include "MergeUtil.h"
+#include "XMLConverter.h"
 
 #include "rapidxml.hpp"
 #include "rapidxml_print.hpp"
 #include "pystring.h"
-#include "pocketpy.h"
 
 #include <map>
 #include <string>
@@ -299,15 +299,14 @@ int XMLContainer::Merge(rapidxml::xml_node<char> *node1, rapidxml::xml_node<char
 // returns zero on success
 int XMLContainer::Operate(const char *operation, const char *element, const char *idAttribute, const char *idValue, const char *changeAttribute, int offset, const std::map<std::string, double> &extraVariables)
 {
-    pkpy::VM vm;
-    pkpy::PyObject *result = nullptr;
-    vm.exec("import math"s);
+    XMLConverter xmlConverter;
+    xmlConverter.exec("import math"s);
     for (auto &&varIt : extraVariables)
     {
         std::stringstream expression;
         expression.precision(17);
         expression << varIt.first << "=" << varIt.second;
-        vm.exec(expression.str());
+        xmlConverter.exec(expression.str());
     }
 
     std::string tagToChange;
@@ -348,9 +347,8 @@ int XMLContainer::Operate(const char *operation, const char *element, const char
                                     std::stringstream expression;
                                     expression.precision(17);
                                     expression << "v=" << tokens[offset];
-                                    vm.exec(expression.str());
-                                    result = vm.eval(operation);
-                                    double v = pkpy::py_cast<double>(&vm, result);
+                                    xmlConverter.exec(expression.str());
+                                    double v = xmlConverter.eval(operation);
                                     out << v;
                                 }
                                 if (i < ((int)tokens.size() - 1)) out << " ";
