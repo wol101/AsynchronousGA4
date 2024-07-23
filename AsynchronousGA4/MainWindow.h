@@ -134,8 +134,7 @@ private:
     std::string m_startExpressionMarker = {"[["};
     std::string m_endExpressionMarker = {"]]"};
 
-    QString m_mergeScript;
-    void runMergeScript();
+    void runPostMergeScript();
 
     void createActions();
     void createMenus();

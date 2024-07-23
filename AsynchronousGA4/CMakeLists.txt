@@ -16,19 +16,30 @@ set(PROJECT_SOURCES
     BasicXMLSyntaxHighlighter.cpp
     GAParametersDialog.cpp
     MainWindow.cpp
+    MergeXML.cpp
     TextEditDialog.cpp
     Utilities.cpp
+    XMLContainer.cpp
+    XMLContainerList.cpp
     main.cpp
 
     BasicXMLSyntaxHighlighter.h
     GAParametersDialog.h
     MainWindow.h
+    MergeUtil.h
+    MergeXML.h
     TextEditDialog.h
+    XMLContainer.h
+    XMLContainerList.h
     Utilities.h
 
     GAParametersDialog.ui
     MainWindow.ui
     TextEditDialog.ui
+
+    ../pocketpy/pocketpy.h
+    ../pystring/pystring.cpp
+    ../pystring/pystring.h
 
     Resources.qrc
 )
@@ -83,7 +94,9 @@ install(TARGETS AsynchronousGA4
 )
 
 target_include_directories(AsynchronousGA4 PRIVATE
+    ../pocketpy
     ../pystring
+    ../rapidxml-1.13
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)

@@ -4,6 +4,9 @@
 #include "Utilities.h"
 #include "TextEditDialog.h"
 #include "GAParametersDialog.h"
+#include "MergeXML.h"
+
+#include "pystring.h"
 
 #include <QDir>
 #include <QFileInfo>
@@ -445,7 +448,33 @@ void MainWindow::runMergeXML()
     QString replace3 = replace2.replace("WORKING_CONFIG_FILE", workingConfig);
     QString replace4 = replace3.replace("CURRENT_LOOP_VALUE", QString::number(m_currentLoopValue, 'g', 17));
     QString replace5 = replace4.replace("FIRST_CONFIG_FILE", firstConfigFile.absoluteFilePath());
-
+    MergeXML mergeXML;
+    mergeXML.ExecuteInstructionFile(replace5.toUtf8().constData());
+    if (mergeXML.errorMessageList().size())
+    {
+        m_mergeXMLTimer->stop();
+        m_runMergeXML = 0;
+        if (ui->spinBoxLogLevel->value() > 0)
+        {
+            appendProgress(QString("MergeXML: Unable to parse file:\n%1").arg(ui->lineEditMergeXMLFile->text()));
+            for (auto &&it : mergeXML.errorMessageList())
+            {
+                appendProgress(QString("Line %1: %2\n").arg(it.first).arg(QString::fromStdString(it.second)));
+                if (ui->spinBoxLogLevel->value() > 1)
+                {
+                    auto tokensIt = mergeXML.errorList().find(it.first);
+                    if (tokensIt != mergeXML.errorList().end())
+                    {
+                        std::string tokens = pystring::join(" "s, tokensIt->second);
+                        appendProgress(QString("%1").arg(QString::fromStdString(tokens)));
+                    }
+                }
+            }
+        }
+        QMessageBox::warning(this, tr("Create Folder Error"), QString("MergeXML: Unable to parse file:\n%1").arg(ui->lineEditMergeXMLFile->text()));
+        activateButtons();
+        return;
+    }
     QString newMergeXML = QDir(outputFolder).filePath("workingMergeXML.txt");
     QFile file(newMergeXML);
     file.open(QFile::WriteOnly);
@@ -469,21 +498,6 @@ void MainWindow::runMergeXML()
     stream << "WORKING_CONFIG_FILE " << workingConfig << "\n";
     stream << "FIRST_CONFIG_FILE " << firstConfigFile.absoluteFilePath() << "\n";
     file2.close();
-
-    // run the python in file newMergeXML
-    m_mergeScript = newMergeXML;
-    runMergeScript();
-    QFileInfo workingConfigInfo(workingConfig);
-    if (!workingConfigInfo.exists() && !workingConfigInfo.isFile())
-    {
-        tryToStopGA();
-        m_mergeXMLTimer->stop();
-        m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("MergeXML: Unable to create:\n%1").arg(workingConfig));
-        QMessageBox::warning(this, tr("Run MergeXML Error"), QString("MergeXML: Unable to create:\n%1").arg(workingConfig));
-        return;
-    }
-
     ui->lineEditXMLMasterFile->setText(workingConfig);
     QString newPopulation = QDir(outputFolder).filePath("workingPopulation.txt");
     QFile::copy(lastPopulation, newPopulation);
@@ -491,7 +505,7 @@ void MainWindow::runMergeXML()
     runGA();
 }
 
-void MainWindow::runMergeScript()
+void MainWindow::runPostMergeScript()
 {
     if (ui->spinBoxLogLevel->value() > 0) appendProgress("Running Merge Script");
     ui->statusBar->showMessage("Running Merge Script");
@@ -772,6 +786,7 @@ void MainWindow::activateButtons()
     ui->lineEditWorkingFolder->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->lineEditMergeXMLFile->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->lineEditGaitSymExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
+    ui->lineEditMergeScriptExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0 && ui->checkBoxMergeXMLActivate->isChecked());
     ui->lineEditGAExecutable->setEnabled(m_ga == nullptr && m_runMergeXML == 0);
     ui->lineEditCurrentLoopCount->setEnabled(ui->checkBoxMergeXMLActivate->isChecked());
     ui->lineEditCurrentLoopValue->setEnabled(ui->checkBoxMergeXMLActivate->isChecked());
