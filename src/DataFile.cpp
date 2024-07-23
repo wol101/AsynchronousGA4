@@ -1661,6 +1661,7 @@ bool DataFile::RetrieveAttribute(const char * const attrib, std::string *val)
     target.append("=\"");
     char *startPtr = strstr(m_fileData.get(), target.c_str());
     if (startPtr == nullptr) return true;
+    startPtr += target.size();
     char *endPtr = strstr(startPtr, "\"");
     if (endPtr == nullptr) return true;
     val->assign(startPtr, endPtr);
