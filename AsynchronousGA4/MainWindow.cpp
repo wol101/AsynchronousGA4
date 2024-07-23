@@ -247,9 +247,9 @@ void MainWindow::pushButtonGaitSymExecutableClicked()
 void MainWindow::pushButtonPostMergeScriptClicked()
 {
 #if defined(_WIN32) || defined(WIN32)
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select the Merge Script executable"), ui->lineEditPostMergeScript->text(), tr("Executable Files (*.exe);;Any File (*.* *)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select the Merge Script executable"), ui->lineEditPostMergeScript->text(), tr("Script Files (*.py *.R);;Executable Files (*.exe *.bat);;Any File (*.* *)"));
 #else
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select the Merge Script executable"), ui->lineEditPostMergeScript->text(), tr("Executable Files (*)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select the Merge Script executable"), ui->lineEditPostMergeScript->text(), tr("Script Files (*.py *.R);;Executable Files (*)"));
 #endif
     if (!fileName.isEmpty())
     {
@@ -533,15 +533,28 @@ void MainWindow::runPostMergeScript()
     {
         arguments << "--startingPopulationFile" << ui->lineEditStartingPopulationFile->text()
                   << "--xmlMasterFile" << ui->lineEditXMLMasterFile->text()
-                  << "--lineEditOutputFolder" << ui->lineEditOutputFolder->text();
+                  << "--outputFolder" << ui->lineEditOutputFolder->text();
         mergeScript.start(mergeScriptExecutable, arguments);
     }
     else
     {
         if (mergeScriptExecutable.endsWith(".py", Qt::CaseInsensitive))
         {
-            interpreter = existsOnPath("python");
-            if (interpreter.isEmpty()) { interpreter = existsOnPath("python3"); }
+            while (interpreter.isEmpty())
+            {
+                interpreter = existsOnPath("python");
+                if (interpreter.size()) break;
+                interpreter = existsOnPath("python3");
+                if (interpreter.size()) break;
+                QStringList options{"C:/ProgramData/miniconda3/python.exe", "C:/ProgramData/anaconda3/python.exe", "C:/Program Files/Spyder/Python/python.exe"};
+                for (auto &&option : options)
+                {
+                    QFileInfo info(option);
+                    if (info.exists() && info.isExecutable()) { interpreter = option; break; }
+                }
+
+                break;
+            }
         }
         if (mergeScriptExecutable.endsWith(".r", Qt::CaseInsensitive))
         {
@@ -559,7 +572,7 @@ void MainWindow::runPostMergeScript()
         arguments << mergeScriptExecutable
                   << "--startingPopulationFile" << ui->lineEditStartingPopulationFile->text()
                   << "--xmlMasterFile" << ui->lineEditXMLMasterFile->text()
-                  << "--lineEditOutputFolder" << ui->lineEditOutputFolder->text();
+                  << "--outputFolder" << ui->lineEditOutputFolder->text();
         mergeScript.start(interpreter, arguments);
     }
 
@@ -935,8 +948,7 @@ void MainWindow::closeEvent (QCloseEvent *event)
 {
     if (m_ga)
     {
-        QMessageBox::StandardButton ret = QMessageBox::warning(this, "AsynchronousGA4", "GA is running.\nAre you sure you want to close?.",
-                                                               QMessageBox::StandardButtons(QMessageBox::Yes | QMessageBox::No), QMessageBox::No);
+        QMessageBox::StandardButton ret = QMessageBox::warning(this, "AsynchronousGA4", "GA is running.\nAre you sure you want to close?.", QMessageBox::StandardButtons(QMessageBox::Yes | QMessageBox::No), QMessageBox::No);
         if (ret == QMessageBox::No)
         {
             event->ignore();
@@ -1067,6 +1079,7 @@ void MainWindow::newFile()
     ui->lineEditWorkingFolder->setText("");
     ui->lineEditMergeXMLFile->setText("");
     ui->lineEditGaitSymExecutable->setText("");
+    ui->lineEditMergeXMLFile->setText("");
     ui->spinBoxLogLevel->setValue(1);
     ui->spinBoxPort->setValue(8086);
     ui->doubleSpinBoxStartValue->setValue(0);
