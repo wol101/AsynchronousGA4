@@ -125,8 +125,14 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
 #endif
 
     auto currentTime = std::chrono::system_clock::now();
+#ifdef MSVC
     auto localSecondsTime = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(currentTime)); //needs to be cast to seconds otherwise %S has decimal digits
     std::string timeString = std::format("{:%Y-%m-%d_%H.%M.%S}", localSecondsTime);
+ #else
+    time_t now = time(nullptr);
+    struct tm *local = localtime(&now);
+    std::string timeString = ToString("%04d-%02d-%02d_%02d.%02d.%02d", local->tm_year + 1900, local->tm_mon + 1, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
+ #endif
     std::string logFileName;
 
     if (m_baseXMLFile.GetSize() == 0)
