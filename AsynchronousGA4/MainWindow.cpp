@@ -620,12 +620,15 @@ void MainWindow::runGaitSym()
     int genomeType;
     MergeUtil::readGenome(inputGenome.toStdString(), &genes, &lowBounds, &highBounds, &gaussianSDs, &circularMutationFlags, &fitness, &genomeType);
     XMLConverter xmlConverter;
-    xmlConverter.LoadBaseXMLFile(inputXML.toUtf8());
+    xmlConverter.LoadBaseXMLFile(inputXML.toStdString());
     xmlConverter.ApplyGenome(genes);
     std::string formattedXML;
     xmlConverter.GetFormattedXML(&formattedXML);
-    QString modelStateFileName = dir.filePath("ModelState.xml");
+    std::ofstream outputXMLFile(outputXML.toStdString(), std::ios::binary);
+    outputXMLFile.write(formattedXML.data(), formattedXML.size());
+    outputXMLFile.close();
 
+    QString modelStateFileName = dir.filePath("ModelState.xml");
     QString gaitSymExecutable = ui->lineEditGaitSymExecutable->text();
     QFileInfo gaitSymExecutableInfo(gaitSymExecutable);
     bool gaitSymExecutableValid = false;
@@ -644,7 +647,7 @@ void MainWindow::runGaitSym()
     if (cycleFlag) outputCycleArgument = "--outputModelStateAtCycle";
     else outputCycleArgument = "--outputModelStateAtTime";
     arguments << "--config" << outputXML
-              << outputCycleArgument << QString::number(outputCycle)
+              << outputCycleArgument << QString::number(outputCycle, 'g', 17)
               << "--modelState" << modelStateFileName;
     QProcess gaitsym;
     gaitsym.start(gaitSymExecutable, arguments);

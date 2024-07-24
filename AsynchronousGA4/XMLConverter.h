@@ -25,8 +25,8 @@ public:
     XMLConverter();
     virtual ~XMLConverter();
 
-    int LoadBaseXMLFile(const char *filename);
-    int LoadBaseXMLString(const char *dataPtr, size_t length);
+    int LoadBaseXMLFile(const std::string &filename);
+    int LoadBaseXMLString(std::string_view data);
     int ApplyGenome(const std::vector<double> &genomeData);
     void GetFormattedXML(std::string *formattedXML);
 
@@ -40,10 +40,10 @@ public:
 private:
 
     std::string m_baseXMLString;
-    std::vector<std::string> m_smartSubstitutionTextComponents;
-    std::vector<std::string> m_smartSubstitutionParserText;
-    std::vector<double> m_smartSubstitutionValues;
-    size_t m_smartSubstitutionTextComponentsSize = 0;
+    std::vector<std::string> m_textComponents;
+    std::vector<std::string> m_parserText;
+    std::vector<double> m_substitutionValues;
+    size_t m_textComponentsSize = 0;
     pkpy::VM *m_pythonVM = nullptr;
 };
 
