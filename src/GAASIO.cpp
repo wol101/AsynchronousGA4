@@ -124,7 +124,7 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
     }
 #endif
 
-#ifdef MSVC
+#if ( __GNUC__ >= 14 ) || ( _MSC_VER >= 1929 ) // these versions required for std::format and std::chrono::current_zone support for C++20
     auto currentTime = std::chrono::system_clock::now();
     auto localSecondsTime = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(currentTime)); //needs to be cast to seconds otherwise %S has decimal digits
     std::string timeString = std::format("{:%Y-%m-%d_%H.%M.%S}", localSecondsTime);
