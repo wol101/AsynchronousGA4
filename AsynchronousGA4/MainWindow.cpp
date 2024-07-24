@@ -533,7 +533,9 @@ void MainWindow::runPostMergeScript()
     {
         arguments << "--startingPopulationFile" << ui->lineEditStartingPopulationFile->text()
                   << "--xmlMasterFile" << ui->lineEditXMLMasterFile->text()
-                  << "--outputFolder" << ui->lineEditOutputFolder->text();
+                  << "--outputFolder" << ui->lineEditOutputFolder->text()
+                  << "--currentLoopValue" << QString::number(m_currentLoopValue, 'g', 17)
+                  << "--logLevel" << ui->spinBoxLogLevel->text();
         mergeScript.start(mergeScriptExecutable, arguments);
     }
     else
@@ -572,7 +574,9 @@ void MainWindow::runPostMergeScript()
         arguments << mergeScriptExecutable
                   << "--startingPopulationFile" << ui->lineEditStartingPopulationFile->text()
                   << "--xmlMasterFile" << ui->lineEditXMLMasterFile->text()
-                  << "--outputFolder" << ui->lineEditOutputFolder->text();
+                  << "--outputFolder" << ui->lineEditOutputFolder->text()
+                  << "--currentLoopValue" << QString::number(m_currentLoopValue, 'g', 17)
+                  << "--logLevel" << ui->spinBoxLogLevel->text();
         mergeScript.start(interpreter, arguments);
     }
 
