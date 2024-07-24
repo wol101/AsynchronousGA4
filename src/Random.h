@@ -11,6 +11,7 @@
 #define RANDOM_H
 
 #include <random>
+#include <array>
 
 class Random
 {
@@ -28,6 +29,8 @@ public:
 
 private:
     std::mt19937_64 m_randomNumberGenerator;
+    std::vector<int> m_cumulativeRank;
+    std::array<int, 2> m_cumulativeRankBounds = {std::numeric_limits<int>::max(), std::numeric_limits<int>::min()};
 };
 
 #endif // RANDOM_H
