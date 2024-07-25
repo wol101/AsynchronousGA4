@@ -7,9 +7,7 @@
  *
  */
 
-#include <assert.h>
 #include <iostream>
-#include <float.h>
 #include <iomanip>
 #include <ios>
 #include <limits>
@@ -154,7 +152,9 @@ void Genome::SetCircularMutation(size_t i, bool circularFlag)
 // output to a stream
 std::ostream& operator<<(std::ostream &out, const Genome &g)
 {
-    out.precision(17);
+    std::ios_base::fmtflags currentFlags = out.flags();
+    std::streamsize currentPrecision = out.precision();
+
     switch (g.m_genomeType)
     {
     case Genome::IndividualRanges:
@@ -162,9 +162,9 @@ std::ostream& operator<<(std::ostream &out, const Genome &g)
         out << g.m_genes.size() << "\n";
         for (size_t i = 0; i < g.m_genes.size(); i++)
         {
-            out << g.m_genes[i] << "\t" << g.m_lowBounds[i] << "\t" << g.m_highBounds[i] << "\t" << g.m_gaussianSDs[i] << "\n";
+            out << std::setprecision(17) << g.m_genes[i] << "\t" << g.m_lowBounds[i] << "\t" << g.m_highBounds[i] << "\t" << std::setprecision(7) << g.m_gaussianSDs[i] << "\n";
         }
-        out << g.m_fitness << "\t0\t0\t0\t0\n";
+        out << std::setprecision(17) << g.m_fitness << "\t0\t0\t0\t0\n";
         break;
 
     case Genome::IndividualCircularMutation:
@@ -172,12 +172,14 @@ std::ostream& operator<<(std::ostream &out, const Genome &g)
         out << g.m_genes.size() << "\n";
         for (size_t i = 0; i < g.m_genes.size(); i++)
         {
-            out << g.m_genes[i] << "\t" << g.m_lowBounds[i] << "\t" << g.m_highBounds[i] << "\t" << g.m_gaussianSDs[i] << "\t" << g.m_circularMutationFlags[i] << "\n";
+            out << std::setprecision(17) << g.m_genes[i] << "\t" << g.m_lowBounds[i] << "\t" << g.m_highBounds[i] << "\t" << std::setprecision(7) << g.m_gaussianSDs[i] << "\t" << g.m_circularMutationFlags[i] << "\n";
         }
-        out << g.m_fitness << std::defaultfloat << "\t0\t0\t0\t0\n";
+        out << std::setprecision(17) << g.m_fitness << std::defaultfloat << "\t0\t0\t0\t0\n";
         break;
     }
 
+    out.precision(currentPrecision);
+    out.flags(currentFlags);
     return out;
 }
 
@@ -202,17 +204,14 @@ std::istream& operator>>(std::istream &in, Genome &g)
     switch (g.m_genomeType)
     {
     case Genome::IndividualRanges:
-        for (size_t i = 0; i < genomeLength; i++)
-            in >> g.m_genes[i] >> g.m_lowBounds[i] >> g.m_highBounds[i] >> g.m_gaussianSDs[i];
+        for (size_t i = 0; i < genomeLength; i++) { in >> g.m_genes[i] >> g.m_lowBounds[i] >> g.m_highBounds[i] >> g.m_gaussianSDs[i]; }
         in >> g.m_fitness >> dummy >> dummy >> dummy >> dummy;
         break;
 
     case Genome::IndividualCircularMutation:
-        for (size_t i = 0; i < genomeLength; i++)
-            in >> g.m_genes[i] >> g.m_lowBounds[i] >> g.m_highBounds[i] >> g.m_gaussianSDs[i] >> g.m_circularMutationFlags[i];
+        for (size_t i = 0; i < genomeLength; i++) { in >> g.m_genes[i] >> g.m_lowBounds[i] >> g.m_highBounds[i] >> g.m_gaussianSDs[i] >> g.m_circularMutationFlags[i]; }
         in >> g.m_fitness >> dummy >> dummy >> dummy >> dummy;
         break;
-
     }
 
     return in;

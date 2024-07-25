@@ -18,7 +18,7 @@
 #include "Genome.h"
 #include "Population.h"
 #include "Random.h"
-#include "Preferences.h"
+#include "Mating.h"
 
 // constructor
 Population::Population()
@@ -41,41 +41,33 @@ void Population::InitialisePopulation(size_t populationSize, const Genome &genom
 // choose a parent from a population
 Genome *Population::ChooseParent(size_t *parentRank, Random *random)
 {
+    switch(m_selectionType)
+    {
     // this type biases random choice to higher ranked individuals using the gamma function
     // this assumes a sorted genome
-    if (m_selectionType == GammaBasedSelection)
-    {
+    case GammaBasedSelection:
         *parentRank = random->GammaBiasedRandomInt(0, m_population.size() - 1, m_gamma);
         return &m_population[m_populationIndex[*parentRank]];
-    }
 
     // in this version we do uniform selection and just choose a parent
     // at random
-    if (m_selectionType == UniformSelection)
-    {
+    case UniformSelection:
         *parentRank = random->RandomInt(0, m_population.size() - 1);
         return &m_population[m_populationIndex[*parentRank]];
-    }
 
     // this type biases random choice to higher ranked individuals
     // this assumes a sorted genome
-    if (m_selectionType == RankBasedSelection)
-    {
+    case RankBasedSelection:
         *parentRank = random->RankBiasedRandomInt(1, m_population.size()) - 1;
         return &m_population[m_populationIndex[*parentRank]];
-    }
 
     // this type biases random choice to higher ranked individuals
     // this assumes a sorted genome
-    if (m_selectionType == SqrtBasedSelection)
-    {
+    case SqrtBasedSelection:
         *parentRank = random->SqrtBiasedRandomInt(0, m_population.size() - 1);
         return &m_population[m_populationIndex[*parentRank]];
     }
-
-    // should never get here
-    std::cerr << "Logic error Population::ChooseParent " << __LINE__ << "\n";
-    return 0;
+    return nullptr;
 }
 
 // insert a genome into the population
@@ -90,7 +82,7 @@ int Population::InsertGenome(Genome &&genome, size_t targetPopulationSize)
     if (targetPopulationSize == 0) targetPopulationSize = originalSize; // not trying to change the size of the population
 
     double fitness = genome.GetFitness();
-    if (m_minimizeScore) { fitness = -fitness; } // now all the sorting will hapen in reverse
+    if (m_minimizeScore) { fitness = -fitness; } // now all the sorting will happen in reverse
     auto findGenome = m_population.find(fitness);
     if (findGenome != m_population.end())
     {
@@ -199,17 +191,18 @@ void Population::ResizePopulation(size_t size, Random *random)
     if (m_population.size() == size) return;
     if (size > m_population.size())
     {
+        size_t parentRank;
         switch (m_resizeControl)
         {
         case RandomiseResize:
             // fill in with random genomes
             for (size_t i = m_population.size(); i < size; i++)
             {
-                Genome g = m_population.begin()->second;
+                Genome g = *ChooseParent(&parentRank, random);
                 g.Randomise(random);
                 g.SetFitness(std::nextafter(m_populationIndex.back(), std::numeric_limits<double>::max()));
                 double fitness = g.GetFitness();
-                if (m_minimizeScore) { fitness = -fitness; } // now all the sorting will hapen in reverse
+                if (m_minimizeScore) { fitness = -fitness; } // now all the sorting will happen in reverse
                 m_populationIndex.push_back(fitness);
                 m_population[fitness] = std::move(g);
             }
@@ -219,11 +212,12 @@ void Population::ResizePopulation(size_t size, Random *random)
             // fill in with mutated genomes
             for (size_t i = m_population.size(); i < size; i++)
             {
-                Genome g = m_population.begin()->second;
+                Genome g = *ChooseParent(&parentRank, random);
                 Mating mating(random);
                 while (mating.GaussianMutate(&g, 1.0, true) == 0);
+                g.SetFitness(std::nextafter(m_populationIndex.back(), std::numeric_limits<double>::max()));
                 double fitness = g.GetFitness();
-                if (m_minimizeScore) { fitness = -fitness; } // now all the sorting will hapen in reverse
+                if (m_minimizeScore) { fitness = -fitness; } // now all the sorting will happen in reverse
                 m_populationIndex.push_back(fitness);
                 m_population[fitness] = std::move(g);
             }
@@ -307,7 +301,7 @@ int Population::ReadPopulation(const char *filename)
             Genome genome;
             inFile >> genome;
             double fitness = genome.GetFitness();
-            if (m_minimizeScore) { fitness = -fitness; } // now all the sorting will hapen in reverse
+            if (m_minimizeScore) { fitness = -fitness; } // now all the sorting will happen in reverse
             if (i > 0 && m_population.find(fitness) != m_population.end())
             {
                 while (m_population.find(fitness) != m_population.end())
