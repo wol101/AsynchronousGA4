@@ -154,6 +154,7 @@ void Genome::SetCircularMutation(size_t i, bool circularFlag)
 // output to a stream
 std::ostream& operator<<(std::ostream &out, const Genome &g)
 {
+    out.precision(17);
     switch (g.m_genomeType)
     {
     case Genome::IndividualRanges:
@@ -161,11 +162,9 @@ std::ostream& operator<<(std::ostream &out, const Genome &g)
         out << g.m_genes.size() << "\n";
         for (size_t i = 0; i < g.m_genes.size(); i++)
         {
-            out << std::scientific << std::setprecision(18) << g.m_genes[i] << "\t" <<
-                   std::defaultfloat << std::setprecision(8) << g.m_lowBounds[i] << "\t" <<
-                   g.m_highBounds[i] << "\t" << g.m_gaussianSDs[i] << "\n";
+            out << g.m_genes[i] << "\t" << g.m_lowBounds[i] << "\t" << g.m_highBounds[i] << "\t" << g.m_gaussianSDs[i] << "\n";
         }
-        out << std::scientific << std::setprecision(18) << g.m_fitness << std::defaultfloat << "\t0\t0\t0\t0\n";
+        out << g.m_fitness << "\t0\t0\t0\t0\n";
         break;
 
     case Genome::IndividualCircularMutation:
@@ -173,11 +172,9 @@ std::ostream& operator<<(std::ostream &out, const Genome &g)
         out << g.m_genes.size() << "\n";
         for (size_t i = 0; i < g.m_genes.size(); i++)
         {
-            out << std::scientific << std::setprecision(18) << g.m_genes[i] << "\t" <<
-                   std::defaultfloat << std::setprecision(8) << g.m_lowBounds[i] << "\t" <<
-                   g.m_highBounds[i] << "\t" << g.m_gaussianSDs[i] << "\t" << g.m_circularMutationFlags[i] << "\n";
+            out << g.m_genes[i] << "\t" << g.m_lowBounds[i] << "\t" << g.m_highBounds[i] << "\t" << g.m_gaussianSDs[i] << "\t" << g.m_circularMutationFlags[i] << "\n";
         }
-        out << std::scientific << std::setprecision(18) << g.m_fitness << std::defaultfloat << "\t0\t0\t0\t0\n";
+        out << g.m_fitness << std::defaultfloat << "\t0\t0\t0\t0\n";
         break;
     }
 

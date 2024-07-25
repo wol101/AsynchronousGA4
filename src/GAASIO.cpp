@@ -33,6 +33,7 @@
 #include <cinttypes>
 #include <filesystem>
 #include <regex>
+#include <string>
 #if ! ( defined(WIN32) || defined(_WIN32))
 #include <sys/resource.h>
 #endif
@@ -198,7 +199,7 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
     }
 
     // write log
-    std:string logFileName = pystring::os::path::join(m_outputFolderName, "log.txt"s);
+    std::string logFileName = pystring::os::path::join(m_outputFolderName, "log.txt"s);
     m_outputLogFile.open(logFileName.c_str());
     if (m_outputLogFile.fail())
     {

@@ -5,7 +5,7 @@
 #include "TextEditDialog.h"
 #include "GAParametersDialog.h"
 #include "MergeXML.h"
-#include "XMLConverter.h".h"
+#include "XMLConverter.h"
 
 #include "pystring.h"
 
@@ -554,7 +554,6 @@ void MainWindow::runPostMergeScript()
                     QFileInfo info(option);
                     if (info.exists() && info.isExecutable()) { interpreter = option; break; }
                 }
-
                 break;
             }
         }
