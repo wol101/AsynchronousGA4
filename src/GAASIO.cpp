@@ -228,6 +228,29 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
     }
     ReportProgress(m_preferences.startingPopulation + " read"s, 0);
 
+    if (m_preferences.randomiseModel)
+    {
+        if (m_startPopulation.GetPopulationSize() != m_preferences.populationSize)
+        {
+            ReportProgress("Info: Starting population size "s + std::to_string(m_startPopulation.GetPopulationSize()) + " does not match specified population size "s + std::to_string(m_preferences.populationSize), 0);
+            m_startPopulation.ResizePopulation(m_preferences.populationSize, &m_random);
+        }
+        ReportProgress("Info: Randomising starting population", 1);
+        m_startPopulation.Randomise(&m_random);
+    }
+    else
+    {
+        if (m_preferences.resizeControl == RandomiseResize)
+        {
+            if (m_startPopulation.GetPopulationSize() != m_preferences.populationSize)
+            {
+                ReportProgress("Info: Starting population size "s + std::to_string(m_startPopulation.GetPopulationSize()) + " does not match specified population size "s + std::to_string(m_preferences.populationSize), 0);
+                ReportProgress("Info: Randomising new members of starting population", 1);
+                m_startPopulation.ResizePopulation(m_preferences.populationSize, &m_random);
+            }
+        }
+    }
+
     if (m_startPopulation.GetPopulationSize() != m_preferences.populationSize)
     {
         ReportProgress("Info: Starting population size "s + std::to_string(m_startPopulation.GetPopulationSize()) + " does not match specified population size "s + std::to_string(m_preferences.populationSize) + " - using standard fixup"s, 0);
