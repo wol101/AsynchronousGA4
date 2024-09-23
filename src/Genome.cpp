@@ -152,34 +152,37 @@ void Genome::SetCircularMutation(size_t i, bool circularFlag)
 // output to a stream
 std::ostream& operator<<(std::ostream &out, const Genome &g)
 {
-    std::ios_base::fmtflags currentFlags = out.flags();
-    std::streamsize currentPrecision = out.precision();
-
+    char buf[256];
     switch (g.m_genomeType)
     {
     case Genome::IndividualRanges:
-        out << g.m_genomeType << "\n";
-        out << g.m_genes.size() << "\n";
+        std::sprintf(buf, "%d\n", g.m_genomeType);
+        out << buf;
+        std::sprintf(buf, "%zu\n", g.m_genes.size());
+        out << buf;
         for (size_t i = 0; i < g.m_genes.size(); i++)
         {
-            out << std::setprecision(17) << g.m_genes[i] << "\t" << g.m_lowBounds[i] << "\t" << g.m_highBounds[i] << "\t" << std::setprecision(7) << g.m_gaussianSDs[i] << "\n";
+            std::sprintf(buf, "%.17g\t%.17g\t%.17g\t%.17g\n", g.m_genes[i], g.m_lowBounds[i], g.m_highBounds[i],  g.m_gaussianSDs[i]);
+            out << buf;
         }
-        out << std::setprecision(17) << g.m_fitness << "\t0\t0\t0\t0\n";
+        std::sprintf(buf, "%.17g\t\t0\t0\t0\t0\n",  g.m_fitness);
+        out << buf;
         break;
 
     case Genome::IndividualCircularMutation:
-        out << g.m_genomeType << "\n";
-        out << g.m_genes.size() << "\n";
+        std::sprintf(buf, "%d\n", g.m_genomeType);
+        out << buf;
+        std::sprintf(buf, "%zu\n", g.m_genes.size());
+        out << buf;
         for (size_t i = 0; i < g.m_genes.size(); i++)
         {
-            out << std::setprecision(17) << g.m_genes[i] << "\t" << g.m_lowBounds[i] << "\t" << g.m_highBounds[i] << "\t" << std::setprecision(7) << g.m_gaussianSDs[i] << "\t" << g.m_circularMutationFlags[i] << "\n";
+            std::sprintf(buf, "%.17g\t%.17g\t%.17g\t%.17g\t%d\n", g.m_genes[i], g.m_lowBounds[i], g.m_highBounds[i],  g.m_gaussianSDs[i], g.m_circularMutationFlags[i]);
+            out << buf;
         }
-        out << std::setprecision(17) << g.m_fitness << std::defaultfloat << "\t0\t0\t0\t0\n";
+        std::sprintf(buf, "%.17g\t\t0\t0\t0\t0\n",  g.m_fitness);
+        out << buf;
         break;
     }
-
-    out.precision(currentPrecision);
-    out.flags(currentFlags);
     return out;
 }
 
