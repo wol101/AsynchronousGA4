@@ -528,3 +528,8 @@ bool ArgParse::ArgumentsOK(const std::string s, const Argument &a)
     }
     return false;
 }
+
+const std::vector<std::string> &ArgParse::rawArguments() const
+{
+    return m_rawArguments;
+}

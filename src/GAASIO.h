@@ -26,6 +26,7 @@ class AsynchronousGAQtWidget;
 class XMLConverter;
 class Genome;
 class SessionASIO;
+class ArgParse;
 
 class GAMain
 {
@@ -84,6 +85,9 @@ public:
     };
 
 
+    ArgParse *argParse() const;
+    void setArgParse(ArgParse *newArgParse);
+
 private:
     int Evolve();
 
@@ -127,6 +131,8 @@ private:
 
     Preferences m_preferences;
     Random m_random;
+
+    ArgParse *m_argParse = nullptr;
 };
 
 #endif

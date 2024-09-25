@@ -69,6 +69,8 @@ public:
     static double ToDouble(const std::string &buf, bool *valid = nullptr); // returns zero if not valid
     static int ToInt(const std::string &buf, bool *valid = nullptr); // returns zero if not valid
 
+    const std::vector<std::string> &rawArguments() const;
+
 private:
     struct Argument
     {

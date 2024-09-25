@@ -81,6 +81,7 @@ int main(int argc, const char **argv)
     argparse.Get("--startingPopulation"s, &startingPopulation);
     
     GAMain ga;
+    ga.setArgParse(&argparse);
     ga.SetLogLevel(logLevel);
     ga.LoadBaseXMLFile(baseXMLFile);
     ga.SetServerPort(serverPort);
@@ -93,8 +94,9 @@ GAMain::GAMain()
 }
 
 int GAMain::Process(const std::string &parameterFile, const std::string &outputDirectory, const std::string &startingPopulation)
-
 {
+    std::string arguments = pystring::join(" "s, m_argParse->rawArguments());
+    ReportProgress(arguments, 0);
     // check and if necessary set some file open limits since this program can open a lot of files
 #if defined(WIN32) || defined(_WIN32)
     ReportProgress("Original number of open files limit = "s + std::to_string(_getmaxstdio()), 1);
@@ -208,7 +210,8 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
     }
     CloseFileGuard closeFileGuard(&m_outputLogFile);
     m_outputLogFile << "GA build " << __DATE__ << " " << __TIME__ "\n";
-    m_outputLogFile << "Log produced " << timeString;
+    m_outputLogFile << "Log produced " << timeString << "\n";
+    m_outputLogFile << "Arguments " << arguments << "\n";
     m_outputLogFile << "parameterFile \"" << m_parameterFile << "\"\n";
     m_outputLogFile << m_preferences.GetPreferencesString() << "\n";
     m_outputLogFile.flush();
@@ -771,6 +774,16 @@ int GAMain::OnlyKeepLastMatching(const std::string &regexPattern)
         }
     }
     return 0;
+}
+
+ArgParse *GAMain::argParse() const
+{
+    return m_argParse;
+}
+
+void GAMain::setArgParse(ArgParse *newArgParse)
+{
+    m_argParse = newArgParse;
 }
 
 void GAMain::handleScore(MessageASIO message)

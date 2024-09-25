@@ -10,7 +10,6 @@
 #include <iostream>
 #include <fstream>
 #include <memory.h>
-#include <map>
 #include <cmath>
 #include <limits>
 #include <algorithm>
@@ -20,22 +19,19 @@
 #include "Random.h"
 #include "Mating.h"
 
+template<typename T> typename std::vector<T>::iterator insert_sorted(std::vector<T> & vec, T const& item)
+{
+    return vec.insert(std::upper_bound(vec.begin(), vec.end(), item), item);
+}
+
+template<typename T, typename Pred> typename std::vector<T>::iterator insert_sorted(std::vector<T> & vec, T const& item, Pred pred)
+{
+    return vec.insert (std::upper_bound(vec.begin(), vec.end(), item, pred), item);
+}
+
 // constructor
 Population::Population()
 {
-}
-
-
-// initialise the population
-void Population::InitialisePopulation(size_t populationSize, const Genome &genome)
-{
-    m_population.clear();
-    m_populationIndex.resize(populationSize);
-    for (size_t i = 0; i < populationSize; i++)
-    {
-        m_population[double(i)] = genome;
-        m_populationIndex[i] = double(i);
-    }
 }
 
 // choose a parent from a population
@@ -47,25 +43,25 @@ Genome *Population::ChooseParent(size_t *parentRank, Random *random)
     // this assumes a sorted genome
     case GammaBasedSelection:
         *parentRank = random->GammaBiasedRandomInt(0, m_population.size() - 1, m_gamma);
-        return &m_population[m_populationIndex[*parentRank]];
+        return m_population[*parentRank].get();
 
     // in this version we do uniform selection and just choose a parent
     // at random
     case UniformSelection:
         *parentRank = random->RandomInt(0, m_population.size() - 1);
-        return &m_population[m_populationIndex[*parentRank]];
+        return m_population[*parentRank].get();
 
     // this type biases random choice to higher ranked individuals
     // this assumes a sorted genome
     case RankBasedSelection:
         *parentRank = random->RankBiasedRandomInt(1, m_population.size()) - 1;
-        return &m_population[m_populationIndex[*parentRank]];
+        return m_population[*parentRank].get();
 
     // this type biases random choice to higher ranked individuals
     // this assumes a sorted genome
     case SqrtBasedSelection:
         *parentRank = random->SqrtBiasedRandomInt(0, m_population.size() - 1);
-        return &m_population[m_populationIndex[*parentRank]];
+        return m_population[*parentRank].get();
     }
     return nullptr;
 }
@@ -76,7 +72,7 @@ Genome *Population::ChooseParent(size_t *parentRank, Random *random)
 // immortal list
 // the key is the numeric value of the fitness so there are rare cases when
 // different genomes with the same fitness will not be accepted
-int Population::InsertGenome(Genome &&genome, size_t targetPopulationSize)
+int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopulationSize)
 {
     size_t originalSize = m_population.size();
     if (targetPopulationSize == 0) targetPopulationSize = originalSize; // not trying to change the size of the population
@@ -181,8 +177,7 @@ int Population::InsertGenome(Genome &&genome, size_t targetPopulationSize)
 // randomise the population
 void Population::Randomise(Random *random)
 {
-    for (auto iter = m_population.begin(); iter != m_population.end(); iter++)
-        iter->second.Randomise(random);
+    for (auto &&iter : m_population) (*iter).Randomise(random);
 }
 
 // reset the population size to a new value - needs at least one valid genome in population
@@ -200,11 +195,10 @@ void Population::ResizePopulation(size_t size, Random *random)
             {
                 Genome g = *ChooseParent(&parentRank, random);
                 g.Randomise(random);
-                g.SetFitness(std::nextafter(m_populationIndex.back(), std::numeric_limits<double>::max()));
+                g.SetFitness(std::nextafter(m_population.back()->GetFitness(), std::numeric_limits<double>::max()));
                 double fitness = g.GetFitness();
                 if (m_minimizeScore) { fitness = -fitness; } // now all the sorting will happen in reverse
-                m_populationIndex.push_back(fitness);
-                m_population[fitness] = std::move(g);
+                m_population.push_back(std::move(g));
             }
             break;
 

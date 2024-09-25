@@ -35,11 +35,9 @@ class Population
 public:
     Population();
 
-    void InitialisePopulation(size_t populationSize, const Genome &genome);
-
-    Genome *GetFirstGenome() { return &m_population.begin()->second; }
-    Genome *GetLastGenome() { return &m_population.rbegin()->second; }
-    Genome *GetGenome(size_t i) { return &m_population[m_populationIndex[i]]; }
+    Genome *GetFirstGenome() { return m_population.begin()->get(); }
+    Genome *GetLastGenome() { return m_population.rbegin()->get(); }
+    Genome *GetGenome(size_t i) { return m_population[i].get(); }
     size_t GetPopulationSize() { return m_population.size(); }
 
     void SetSelectionType(SelectionType type) { m_selectionType = type; }
@@ -51,7 +49,7 @@ public:
 
     Genome *ChooseParent(size_t *parentRank, Random *random);
     void Randomise(Random *random);
-    int InsertGenome(Genome &&genome, size_t targetPopulationSize);
+    int InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopulationSize);
     void ResizePopulation(size_t size, Random *random);
 
     int ReadPopulation(const char *filename);
@@ -59,9 +57,8 @@ public:
 
 protected:
 
-    std::map<double, Genome> m_population;
-    std::vector<double> m_populationIndex; // sorted vector
-    std::vector<double> m_immortalListIndex; // sorted vector
+    std::vector<std::unique_ptr<Genome>> m_population; // list of genomes sorted by fitness
+    std::vector<double> m_immortalList; // sorted vector
     std::vector<double> m_ageList; // apparently a vector will be faster than a deque on a modern cpu
     SelectionType m_selectionType = RankBasedSelection;
     size_t m_parentsToKeep = 0;
