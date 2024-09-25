@@ -12,8 +12,6 @@
 
 #include "Genome.h"
 
-#include <map>
-
 class Random;
 
 enum SelectionType
@@ -58,8 +56,8 @@ public:
 protected:
 
     std::vector<std::unique_ptr<Genome>> m_population; // list of genomes sorted by fitness
-    std::vector<double> m_immortalList; // sorted vector
-    std::vector<double> m_ageList; // apparently a vector will be faster than a deque on a modern cpu
+    std::vector<Genome *> m_immortalList; // sorted vector
+    std::vector<Genome *> m_ageList; // apparently a vector will be faster than a deque on a modern cpu
     SelectionType m_selectionType = RankBasedSelection;
     size_t m_parentsToKeep = 0;
     ResizeControl m_resizeControl = MutateResize;

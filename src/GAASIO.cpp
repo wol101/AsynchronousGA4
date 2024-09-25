@@ -476,7 +476,7 @@ int GAMain::Evolve()
             }
             iter->second->genome.SetFitness(result);
             // std::cerr << iter->second->genome;
-            m_evolvePopulation.InsertGenome(std::move(iter->second->genome), m_preferences.populationSize);
+            m_evolvePopulation.InsertGenome(std::make_unique<Genome>(std::move(iter->second->genome)), m_preferences.populationSize);
             runningList.erase(iter);
 
             if (returnCount % uint32_t(m_preferences.outputStatsEvery) == uint32_t(m_preferences.outputStatsEvery) - 1)

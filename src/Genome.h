@@ -50,7 +50,7 @@ public:
     void SetGlobalCircularMutationFlag(bool circularFlag) { m_globalCircularMutationFlag = circularFlag; }
     void Clear();
 
-    bool operator<(const Genome &in);
+    friend constexpr auto operator<=>(const Genome& l, const Genome& r) noexcept {  return (l.m_fitness <=> r.m_fitness); }
 
     friend std::ostream& operator<<(std::ostream &out, const Genome &g);
     friend std::istream& operator>>(std::istream &in, Genome &g);

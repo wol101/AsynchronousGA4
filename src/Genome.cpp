@@ -105,15 +105,6 @@ void Genome::Randomise(Random *random)
     }
 }
 
-
-// define < operator
-bool Genome::operator<(const Genome &in)
-{
-    std::cerr << "Fitness test " << this->GetFitness() << " " << in.GetFitness() << "\n";
-    if (this->GetFitness() < in.GetFitness()) return true;
-    return false;
-}
-
 // get the value of the circular mutation flag for a gene
 bool Genome::GetCircularMutation(int i)
 {
