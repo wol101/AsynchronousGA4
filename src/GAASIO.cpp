@@ -229,36 +229,24 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
         ReportProgress("Error reading starting population: "s + m_preferences.startingPopulation, 0);
         return __LINE__;
     }
+    if (m_startPopulation.GetPopulationSize() == 0)
+    {
+        ReportProgress("Error reading starting population: "s + m_preferences.startingPopulation + " size is zero"s, 0);
+        return __LINE__;
+    }
     ReportProgress(m_preferences.startingPopulation + " read"s, 0);
-
-    if (m_preferences.randomiseModel)
-    {
-        if (m_startPopulation.GetPopulationSize() != m_preferences.populationSize)
-        {
-            ReportProgress("Info: Starting population size "s + std::to_string(m_startPopulation.GetPopulationSize()) + " does not match specified population size "s + std::to_string(m_preferences.populationSize), 0);
-            m_startPopulation.ResizePopulation(m_preferences.populationSize, &m_random);
-        }
-        ReportProgress("Info: Randomising starting population", 1);
-        m_startPopulation.Randomise(&m_random);
-    }
-    else
-    {
-        if (m_preferences.resizeControl == RandomiseResize)
-        {
-            if (m_startPopulation.GetPopulationSize() != m_preferences.populationSize)
-            {
-                ReportProgress("Info: Starting population size "s + std::to_string(m_startPopulation.GetPopulationSize()) + " does not match specified population size "s + std::to_string(m_preferences.populationSize), 0);
-                ReportProgress("Info: Randomising new members of starting population", 1);
-                m_startPopulation.ResizePopulation(m_preferences.populationSize, &m_random);
-            }
-        }
-    }
 
     if (m_startPopulation.GetPopulationSize() != m_preferences.populationSize)
     {
-        ReportProgress("Info: Starting population size "s + std::to_string(m_startPopulation.GetPopulationSize()) + " does not match specified population size "s + std::to_string(m_preferences.populationSize) + " - using standard fixup"s, 0);
+        ReportProgress("Info: Starting population size "s + std::to_string(m_startPopulation.GetPopulationSize()) + " does not match specified population size "s + std::to_string(m_preferences.populationSize), 0);
         m_startPopulation.ResizePopulation(m_preferences.populationSize, &m_random);
     }
+    if (m_preferences.randomiseModel)
+    {
+        ReportProgress("Info: Randomising starting population", 1);
+        m_startPopulation.Randomise(&m_random);
+    }
+
     if (m_startPopulation.GetGenome(0)->GetGenomeLength() != m_preferences.genomeLength)
     {
         ReportProgress("Error: Starting population genome does not match specified genome length"s, 0);

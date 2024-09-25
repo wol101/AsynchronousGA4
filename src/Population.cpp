@@ -29,7 +29,7 @@ template<typename T> typename std::vector<T>::iterator insert_sorted(std::vector
         auto iter = std::lower_bound(vec.begin(), vec.end(), item);
         // lower_bound
         // if a searching element exists: std::lower_bound() returns iterator to the element itself
-        if (*iter == item) return iter;
+        if (iter != vec.end() && *iter == item) return iter;
         // if a searching element doesn't exist:
         //    if all elements are greater than the searching element: lower_bound() returns an iterator to begin of the range
         //    if all elements are lower than the searching element: lower_bound() returns an iterator to end of the range
@@ -55,7 +55,7 @@ template<typename T, typename Pred> typename std::vector<T>::iterator insert_sor
         auto iter = std::lower_bound(vec.begin(), vec.end(), item, pred);
         // lower_bound
         // if a searching element exists: std::lower_bound() returns iterator to the element itself
-        if (*iter == item) return iter;
+        if (iter != vec.end() && *iter == item) return iter;
         // if a searching element doesn't exist:
         //    if all elements are greater than the searching element: lower_bound() returns an iterator to begin of the range
         //    if all elements are lower than the searching element: lower_bound() returns an iterator to end of the range
@@ -126,7 +126,7 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
     else { iter = std::lower_bound(m_population.begin(), m_population.end(), genome, [](const std::unique_ptr<Genome> &lhs, const std::unique_ptr<Genome> &rhs) -> bool { return lhs->GetFitness() < rhs->GetFitness(); }); }
     // lower_bound
     // if a searching element exists: std::lower_bound() returns iterator to the element itself
-    if (*iter == genome)
+    if (iter != m_population.end() && iter->get()->GetFitness() == genome->GetFitness())
     {
 #ifdef DEBUG_POPULATION
         std::cerr << "InsertGenome genome->GetFitness()= " << genome->GetFitness() << " already in population\n";
@@ -142,7 +142,7 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
     Genome *genomePtr = genome.get();
     m_population.insert(iter, std::move(genome));
 #ifdef DEBUG_POPULATION
-    std::cerr << "m_population.size(()=" << m_population.size() << " genome->GetFitness()=" << genome->GetFitness() << "\n";
+    std::cerr << "m_population.size(()=" << m_population.size() << " genome->GetFitness()=" << genomePtr->GetFitness() << "\n";
 #endif
 
     // ok now insert into the other internal lists
@@ -150,7 +150,7 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
     {
         m_ageList.push_back(genomePtr); // just add current genome to list by age
 #ifdef DEBUG_POPULATION
-        std::cerr << "InsertGenome adding to m_AgeList - no test; size = " << m_ageList.size() << "\n";
+        std::cerr << "InsertGenome adding to m_AgeList - no test; size=" << m_ageList.size() << "\n";
 #endif
     }
     else
@@ -161,7 +161,7 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
             std::vector<Genome *>::iterator iter2;
             if (m_minimizeScore) { iter2 = std::lower_bound(m_immortalList.begin(), m_immortalList.end(), genomePtr, [](const Genome *lhs, const Genome *rhs) -> bool { return lhs->GetFitness() > rhs->GetFitness(); }); }
             else { iter2 = std::lower_bound(m_immortalList.begin(), m_immortalList.end(), genomePtr, [](const Genome *lhs, const Genome *rhs) -> bool { return lhs->GetFitness() < rhs->GetFitness(); }); }
-            if (*iter2 == genomePtr)
+            if (iter2 != m_immortalList.end() && *iter2 == genomePtr)
             {
                 std::cerr << "Logic error Population::InsertGenome m_immortalList already contains genomePtr " << __LINE__ << "\n";
             }
@@ -170,7 +170,7 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
                 m_immortalList.insert(iter2, genomePtr);
             }
 #ifdef DEBUG_POPULATION
-            std::cerr << "InsertGenome adding to m_immortalList - no test; size = " << m_immortalList.size() << "\n";
+            std::cerr << "InsertGenome adding to m_immortalList - no test; size=" << m_immortalList.size() << "\n";
 #endif
         }
         else
@@ -180,7 +180,7 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
                 if (genomePtr->GetFitness() < m_immortalList.front()->GetFitness())
                 {
                     std::vector<Genome *>::iterator iter2 = std::lower_bound(m_immortalList.begin(), m_immortalList.end(), genomePtr, [](const Genome *lhs, const Genome *rhs) -> bool { return lhs->GetFitness() > rhs->GetFitness(); });
-                    if (*iter2 == genomePtr)
+                    if (iter2 != m_immortalList.end() && *iter2 == genomePtr)
                     {
                         std::cerr << "Logic error Population::InsertGenome m_immortalList already contains genomePtr " << __LINE__ << "\n";
                     }
@@ -191,14 +191,14 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
                         m_immortalList.erase(m_immortalList.begin());
                     }
 #ifdef DEBUG_POPULATION
-                    std::cerr << "InsertGenome adding to m_immortalList; size = " << m_immortalList.size() << "\n";
+                    std::cerr << "InsertGenome adding to m_immortalList; size=" << m_immortalList.size() << "\n";
 #endif
                 }
                 else
                 {
                     m_ageList.push_back(genomePtr);
 #ifdef DEBUG_POPULATION
-                    std::cerr << "InsertGenome adding to m_ageList after test; size = " << m_ageList.size() << "\n";
+                    std::cerr << "InsertGenome adding to m_ageList after test; size=" << m_ageList.size() << "\n";
 #endif
                 }
             }
@@ -207,7 +207,7 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
                 if (genomePtr->GetFitness() > m_immortalList.front()->GetFitness())
                 {
                     std::vector<Genome *>::iterator iter2 = std::lower_bound(m_immortalList.begin(), m_immortalList.end(), genomePtr, [](const Genome *lhs, const Genome *rhs) -> bool { return lhs->GetFitness() < rhs->GetFitness(); });
-                    if (*iter2 == genomePtr)
+                    if (iter2 != m_immortalList.end() && *iter2 == genomePtr)
                     {
                         std::cerr << "Logic error Population::InsertGenome m_immortalList already contains genomePtr " << __LINE__ << "\n";
                     }
@@ -218,14 +218,14 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
                         m_immortalList.erase(m_immortalList.begin());
                     }
 #ifdef DEBUG_POPULATION
-                    std::cerr << "InsertGenome adding to m_immortalList; size = " << m_immortalList.size() << "\n";
+                    std::cerr << "InsertGenome adding to m_immortalList; size=" << m_immortalList.size() << "\n";
 #endif
                 }
                 else
                 {
                     m_ageList.push_back(genomePtr);
 #ifdef DEBUG_POPULATION
-                    std::cerr << "InsertGenome adding to m_ageList after test; size = " << m_ageList.size() << "\n";
+                    std::cerr << "InsertGenome adding to m_ageList after test; size=" << m_ageList.size() << "\n";
 #endif
                 }
             }
@@ -243,15 +243,21 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
         }
         Genome *genomeToDelete = *m_ageList.begin();
         m_ageList.erase(m_ageList.begin()); // equivalent to pop_front()
+#ifdef DEBUG_POPULATION
+        std::cerr << "InsertGenome reducing m_ageList size; size=" << m_ageList.size() << "\n";
+#endif
 
         std::vector<std::unique_ptr<Genome>>::iterator iter3;
         if (m_minimizeScore) { iter3 = std::lower_bound(m_population.begin(), m_population.end(), genomeToDelete, [](const std::unique_ptr<Genome> &lhs, const Genome *rhs) -> bool { return lhs->GetFitness() > rhs->GetFitness(); }); }
         else { iter3 = std::lower_bound(m_population.begin(), m_population.end(), genomeToDelete, [](const std::unique_ptr<Genome> &lhs, const Genome *rhs) -> bool { return lhs->GetFitness() < rhs->GetFitness(); }); }
         // lower_bound
         // if a searching element exists: std::lower_bound() returns iterator to the element itself
-        if ((*iter3)->GetFitness() == genomeToDelete->GetFitness())
+        if (*iter3 && (*iter3)->GetFitness() == genomeToDelete->GetFitness())
         {
             m_population.erase(iter3);
+#ifdef DEBUG_POPULATION
+            std::cerr << "InsertGenome reducing m_population size; size=" << m_population.size() << "\n";
+#endif
         }
         else
         {
@@ -260,6 +266,12 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
             continue;
         }
     }
+#ifdef DEBUG_POPULATION
+    if (m_ageList.size() + m_immortalList.size() != m_population.size())
+    {
+         std::cerr << "Logic error Population::InsertGenome m_ageList.size() + m_immortalList.size() != m_population.size() " << __LINE__ << "\n";
+    }
+#endif
     return 0;
 }
 
@@ -284,8 +296,8 @@ void Population::ResizePopulation(size_t size, Random *random)
             {
                 auto g = std::make_unique<Genome>(*ChooseParent(&parentRank, random));
                 g->Randomise(random);
-                if (m_minimizeScore) {g->SetFitness(std::nextafter(m_population.back()->GetFitness(), -std::numeric_limits<double>::max()));}
-                else { g->SetFitness(std::nextafter(m_population.back()->GetFitness(), std::numeric_limits<double>::max())); }
+                if (m_minimizeScore) {g->SetFitness(std::nextafter(m_population.front()->GetFitness(), std::numeric_limits<double>::max()));}
+                else { g->SetFitness(std::nextafter(m_population.front()->GetFitness(), -std::numeric_limits<double>::max())); }
                 InsertGenome(std::move(g), size);
             }
             break;
@@ -297,8 +309,8 @@ void Population::ResizePopulation(size_t size, Random *random)
                 auto g = std::make_unique<Genome>(*ChooseParent(&parentRank, random));
                 Mating mating(random);
                 while (mating.GaussianMutate(g.get(), 1.0, true) == 0);
-                if (m_minimizeScore) {g->SetFitness(std::nextafter(m_population.back()->GetFitness(), -std::numeric_limits<double>::max()));}
-                else { g->SetFitness(std::nextafter(m_population.back()->GetFitness(), std::numeric_limits<double>::max())); }
+                if (m_minimizeScore) {g->SetFitness(std::nextafter(m_population.front()->GetFitness(), std::numeric_limits<double>::max()));}
+                else { g->SetFitness(std::nextafter(m_population.front()->GetFitness(), -std::numeric_limits<double>::max())); }
                 InsertGenome(std::move(g), size);
             }
             break;
@@ -308,9 +320,13 @@ void Population::ResizePopulation(size_t size, Random *random)
     else
     {
         size_t delta = m_population.size() - size;
-        for (size_t i = 0; i < delta; i++)
+        std::vector<std::unique_ptr<Genome>> population;
+        std::swap(population, m_population);
+        m_immortalList.clear();
+        m_ageList.clear();
+        for (size_t i = 0; i < size; i++)
         {
-            m_population.erase(m_population.begin());
+            InsertGenome(std::move(population[delta + size]), size);
         }
     }
 }
