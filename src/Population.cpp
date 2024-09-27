@@ -7,19 +7,19 @@
  *
  */
 
-#include <iostream>
-#include <fstream>
-#include <memory.h>
-#include <cmath>
-#include <limits>
-#include <algorithm>
-
 #include "Genome.h"
 #include "Population.h"
 #include "Random.h"
 #include "Mating.h"
 
-#define DEBUG_POPULATION
+#include <iostream>
+#include <fstream>
+#include <memory>
+#include <cmath>
+#include <limits>
+#include <algorithm>
+
+//#define DEBUG_POPULATION
 
 // this inserts an item into a sorted vec
 template<typename T> typename std::vector<T>::iterator insert_sorted(std::vector<T> &vec, T const& item, bool unique)

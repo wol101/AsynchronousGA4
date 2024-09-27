@@ -12,6 +12,8 @@
 
 #include "Genome.h"
 
+#include <memory>
+
 class Random;
 
 enum SelectionType
