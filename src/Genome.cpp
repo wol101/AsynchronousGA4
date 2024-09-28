@@ -8,8 +8,6 @@
  */
 
 #include <iostream>
-#include <iomanip>
-#include <ios>
 #include <limits>
 
 #include "Genome.h"
@@ -124,22 +122,6 @@ bool Genome::GetCircularMutation(int i)
     return v;
 }
 
-// set the value of the circular mutation flag for a gene
-void Genome::SetCircularMutation(size_t i, bool circularFlag)
-{
-    switch (m_genomeType)
-    {
-    case IndividualRanges:
-        m_globalCircularMutationFlag = circularFlag;
-        break;
-
-    case IndividualCircularMutation:
-        m_circularMutationFlags[i] = circularFlag;
-        break;
-    }
-}
-
-
 // output to a stream
 std::ostream& operator<<(std::ostream &out, const Genome &g)
 {
@@ -156,7 +138,7 @@ std::ostream& operator<<(std::ostream &out, const Genome &g)
             std::sprintf(buf, "%.17g\t%.17g\t%.17g\t%.17g\n", g.m_genes[i], g.m_lowBounds[i], g.m_highBounds[i],  g.m_gaussianSDs[i]);
             out << buf;
         }
-        std::sprintf(buf, "%.17g\t\t0\t0\t0\t0\n",  g.m_fitness);
+        std::sprintf(buf, "%.17g\t0\t0\t0\t0\n",  g.m_fitness);
         out << buf;
         break;
 
@@ -170,7 +152,7 @@ std::ostream& operator<<(std::ostream &out, const Genome &g)
             std::sprintf(buf, "%.17g\t%.17g\t%.17g\t%.17g\t%d\n", g.m_genes[i], g.m_lowBounds[i], g.m_highBounds[i],  g.m_gaussianSDs[i], g.m_circularMutationFlags[i]);
             out << buf;
         }
-        std::sprintf(buf, "%.17g\t\t0\t0\t0\t0\n",  g.m_fitness);
+        std::sprintf(buf, "%.17g\t0\t0\t0\t0\n",  g.m_fitness);
         out << buf;
         break;
     }

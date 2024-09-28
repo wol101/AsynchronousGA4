@@ -46,8 +46,7 @@ public:
     void Randomise(Random *random);
     void SetGene(size_t i, double value) { m_genes[i] = value; }
     void SetFitness(double fitness) { m_fitness = fitness; }
-    void SetCircularMutation(size_t i, bool circularFlag);
-    void SetGlobalCircularMutationFlag(bool circularFlag) { m_globalCircularMutationFlag = circularFlag; }
+    void SetGlobalCircularMutationFlag(bool globalCircularMutationFlag) { m_globalCircularMutationFlag = globalCircularMutationFlag; }
     void Clear();
 
     friend constexpr auto operator<=>(const Genome& l, const Genome& r) noexcept {  return (l.m_fitness <=> r.m_fitness); }
@@ -61,7 +60,7 @@ private:
     std::vector<double> m_lowBounds;
     std::vector<double> m_highBounds;
     std::vector<double> m_gaussianSDs;
-    std::vector<char> m_circularMutationFlags;
+    std::vector<int> m_circularMutationFlags;
     GenomeType m_genomeType = IndividualRanges;
     bool m_globalCircularMutationFlag = false;
     double m_fitness = -std::numeric_limits<double>::max();
