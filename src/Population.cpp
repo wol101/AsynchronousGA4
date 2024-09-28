@@ -352,7 +352,7 @@ int Population::WritePopulation(const char *filename, size_t nBest)
         size_t count = 0;
         for (auto iter = m_population.rbegin(); iter != m_population.rend(); ++iter)
         {
-            outFile << *iter;
+            outFile << **iter;
             count++;
             if (count >= nBest) break;
         }
