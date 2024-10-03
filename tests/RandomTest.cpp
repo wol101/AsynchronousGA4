@@ -8,7 +8,7 @@ int main(int argc, const char **argv)
     std::ofstream outputFile("D:/wis/Scratch/random_text.tab");
     outputFile << "i\trandomDouble\trandomInt\tcoinFlip\tsqrtBiasedRandomInt\trandomUnitGaussian\tgammaBiasedRandomInt\trankBiasedRandomInt\n";
 
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < 100000; i++)
     {
         double randomDouble = random.RandomDouble(-10, 10);
         int randomInt = random.RandomInt(1, 6);
