@@ -19,7 +19,7 @@ GAParametersDialog::GAParametersDialog(QWidget *parent) :
 
     // initialise the combo boxes
     QStringList crossoverType = {"OnePoint", "Average"};
-    QStringList parentSelection = {"UniformSelection", "RankBasedSelection", "SqrtBasedSelection", "GammaBasedSelection"};
+    QStringList parentSelection = {"UniformSelection", "SqrtBasedSelection", "GammaBasedSelection"};
     QStringList resizeControl = {"RandomiseResize", "MutateResize"};
     for (auto &&it : crossoverType) ui->comboBoxCrossoverType->addItem(it);
     for (auto &&it : parentSelection) ui->comboBoxParentSelection->addItem(it);
