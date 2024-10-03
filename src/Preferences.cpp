@@ -50,7 +50,6 @@ int Preferences::ReadPreferences(const std::string &filename)
 
         if (params.RetrieveAttribute("parentSelection", &paramsBuffer)) throw __LINE__;
         if (paramsBuffer == "UniformSelection"s) parentSelection = UniformSelection;
-        else if (paramsBuffer == "RankBasedSelection"s) parentSelection = RankBasedSelection;
         else if (paramsBuffer == "SqrtBasedSelection"s) parentSelection = SqrtBasedSelection;
         else if (paramsBuffer == "GammaBasedSelection"s) parentSelection = GammaBasedSelection;
         else throw __LINE__;
@@ -117,9 +116,6 @@ std::string Preferences::GetPreferencesString()
     {
     case UniformSelection:
         out << "parentSelection " << "UniformSelection\n";
-        break;
-    case RankBasedSelection:
-        out << "parentSelection " << "RankBasedSelection\n";
         break;
     case SqrtBasedSelection:
         out << "parentSelection " << "SqrtBasedSelection\n";

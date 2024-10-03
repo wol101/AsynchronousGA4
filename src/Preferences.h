@@ -40,7 +40,7 @@ public:
     int improvementReproductions = 0;
     double improvementThreshold = 0;
     bool multipleGaussian = false;
-    SelectionType parentSelection = RankBasedSelection;
+    SelectionType parentSelection = SqrtBasedSelection;
     Mating::CrossoverType crossoverType = Mating::Average;
     std::string startingPopulation;
     bool randomiseModel = false;

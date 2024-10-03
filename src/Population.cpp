@@ -97,12 +97,7 @@ Genome *Population::ChooseParent(size_t *parentRank, Random *random)
 
     // this type biases random choice to higher ranked individuals
     // this assumes a sorted genome
-    case RankBasedSelection:
-        *parentRank = size_t(random->RankBiasedRandomInt(1, int(m_population.size())) - 1);
-        return m_population[*parentRank].get();
-
-    // this type biases random choice to higher ranked individuals
-    // this assumes a sorted genome
+    // note - the distribution is the same as the old RankBasedSelection
     case SqrtBasedSelection:
         *parentRank = size_t(random->SqrtBiasedRandomInt(0, int(m_population.size() - 1)));
         return m_population[*parentRank].get();

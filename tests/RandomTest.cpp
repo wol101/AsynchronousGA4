@@ -6,7 +6,7 @@ int main(int argc, const char **argv)
 {
     Random random;
     std::ofstream outputFile("D:/wis/Scratch/random_text.tab");
-    outputFile << "i\trandomDouble\trandomInt\tcoinFlip\tsqrtBiasedRandomInt\trandomUnitGaussian\tgammaBiasedRandomInt\trankBiasedRandomInt\n";
+    outputFile << "i\trandomDouble\trandomInt\tcoinFlip\tsqrtBiasedRandomInt\trandomUnitGaussian\tgammaBiasedRandomInt\n";
 
     for (int i = 0; i < 100000; i++)
     {
@@ -16,8 +16,7 @@ int main(int argc, const char **argv)
         int sqrtBiasedRandomInt = random.SqrtBiasedRandomInt(0, 1000);
         double randomUnitGaussian = random.RandomUnitGaussian();
         int gammaBiasedRandomInt = random.GammaBiasedRandomInt(0, 500, 0.2);
-        int rankBiasedRandomInt = random.RankBiasedRandomInt(0, 100);
-        outputFile << i << "\t" << randomDouble << "\t" << randomInt << "\t" << coinFlip << "\t" << sqrtBiasedRandomInt << "\t" << randomUnitGaussian << "\t" << gammaBiasedRandomInt << "\t" << rankBiasedRandomInt << "\n";
+        outputFile << i << "\t" << randomDouble << "\t" << randomInt << "\t" << coinFlip << "\t" << sqrtBiasedRandomInt << "\t" << randomUnitGaussian << "\t" << gammaBiasedRandomInt << "\n";
     }
 }
 

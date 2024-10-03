@@ -65,13 +65,6 @@ matplotlib.pyplot.title(f'Histogram of {column_to_plot}')
 matplotlib.pyplot.grid(True)
 matplotlib.pyplot.show()
 
-column_to_plot = 'rankBiasedRandomInt'
-matplotlib.pyplot.hist(df[column_to_plot], edgecolor='black', bins=[x*1-0.5 for x in range(0,101)])
-matplotlib.pyplot.xlabel('Values')
-matplotlib.pyplot.ylabel('Frequency')
-matplotlib.pyplot.title(f'Histogram of {column_to_plot}')
-matplotlib.pyplot.grid(True)
-matplotlib.pyplot.show()
 
 
 

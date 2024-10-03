@@ -24,7 +24,6 @@ public:
     bool CoinFlip(double chanceOfReturningTrue = 0.5);
     int SqrtBiasedRandomInt(int lowBound, int highBound);
     double RandomUnitGaussian();
-    int RankBiasedRandomInt(int lowBound, int highBound);
     int GammaBiasedRandomInt(int lowBound, int highBound, double gamma);
 
 private:
