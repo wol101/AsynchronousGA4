@@ -33,6 +33,13 @@ add_executable(AsynchronousGA4CL
     ../pystring/pystring.h
 )
 
+add_executable(RandomTest
+    ../src/Random.cpp
+    ../src/Random.h
+    ../tests/RandomTest.cpp
+)
+
+
 target_include_directories(AsynchronousGA4CL PRIVATE
     ../src
     ../asio-1.18.2/include
@@ -40,7 +47,7 @@ target_include_directories(AsynchronousGA4CL PRIVATE
 )
 
 if (MSVC)
-    target_compile_options(AsynchronousGA4CL PRIVATE /bigobj /MT)
+    target_compile_options(AsynchronousGA4CL PRIVATE /bigobj /MT) # /MT allows multithreading
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS _WINSOCK_DEPRECATED_NO_WARNINGS _WIN32_WINNT=_WIN32_WINNT_WIN7)
 endif ()
 

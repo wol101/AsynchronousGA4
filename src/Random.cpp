@@ -93,38 +93,45 @@ int Random::GammaBiasedRandomInt(int lowBound, int highBound, double gamma)
 int Random::RankBiasedRandomInt(int lowBound, int highBound)
 {
     if (lowBound >= highBound) return lowBound;
+    static int myLowBound = 0;
+    static int myHighBound = 0;
+    static int n = 0;
+    static int total = 0;
+    static std::unique_ptr<int[]> cumulative;
+    int i, j;
 
-    // slow initialisation only when the bounds change
-    if (m_cumulativeRankBounds[0] != lowBound || m_cumulativeRankBounds[1] != highBound)
+    // slow initialisation only done once
+    if (myLowBound != lowBound || myHighBound != highBound)
     {
-        m_cumulativeRankBounds[0] = lowBound;
-        m_cumulativeRankBounds[1] = highBound;
-        m_cumulativeRank.clear();
-        m_cumulativeRank.reserve(1 + m_cumulativeRankBounds[1] - m_cumulativeRankBounds[0]);
+        myLowBound = lowBound;
+        myHighBound = highBound;
+        n = 1 + myHighBound - myLowBound;
+        cumulative = std::make_unique<int[]>(n);
 
         // produce a cumulative map
-        int total = 0;
-        for (int i = m_cumulativeRankBounds[0]; i <= m_cumulativeRankBounds[1]; i++)
+        j = 0;
+        for (i = myLowBound; i <= myHighBound; i++)
         {
             total += i;
-            m_cumulativeRank.push_back(total);
+            cumulative[j] = total;
+            j++;
         }
     }
 
     // get a random int
-    int j = RandomInt(0, m_cumulativeRank.back());
+    j = RandomInt(0, total);
 
     // and search for it in the list
     int lower = 0;
-    int upper = int(m_cumulativeRank.size()) - 1;
+    int upper = n - 1;
     int pivot = (upper - lower) / 2;
     int delta;
 
     while (true)
     {
         if (pivot == 0) break;
-        if (m_cumulativeRank[pivot - 1] < j && m_cumulativeRank[pivot] >= j) break;
-        if (j > m_cumulativeRank[pivot])
+        if (cumulative[pivot - 1] < j && cumulative[pivot] >= j) break;
+        if (j > cumulative[pivot])
         {
             lower = pivot;
             delta = (upper - lower) / 2;
@@ -140,8 +147,9 @@ int Random::RankBiasedRandomInt(int lowBound, int highBound)
         }
     }
 
-    return pivot + m_cumulativeRankBounds[0];
+    return pivot + myLowBound;
 }
+
 
 // random coin flip - returns true a proportion of the time that
 // depends on 'chanceOfReturningTrue'
