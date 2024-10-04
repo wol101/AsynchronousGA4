@@ -24,6 +24,7 @@ matplotlib.pyplot.ylabel('Frequency')
 matplotlib.pyplot.title(f'Histogram of {column_to_plot}')
 matplotlib.pyplot.grid(True)
 matplotlib.pyplot.show()
+print('%s min=%s max=%s' % (column_to_plot, str(min(df[column_to_plot])), str(max(df[column_to_plot]))))
 
 column_to_plot = 'randomInt'
 matplotlib.pyplot.hist(df[column_to_plot], edgecolor='black', bins=[x+0.5 for x in range(0,7)])
@@ -32,6 +33,7 @@ matplotlib.pyplot.ylabel('Frequency')
 matplotlib.pyplot.title(f'Histogram of {column_to_plot}')
 matplotlib.pyplot.grid(True)
 matplotlib.pyplot.show()
+print('%s min=%s max=%s' % (column_to_plot, str(min(df[column_to_plot])), str(max(df[column_to_plot]))))
 
 column_to_plot = 'coinFlip'
 matplotlib.pyplot.hist(df[column_to_plot], edgecolor='black', bins=[x-0.5 for x in range(0,3)])
@@ -40,6 +42,7 @@ matplotlib.pyplot.ylabel('Frequency')
 matplotlib.pyplot.title(f'Histogram of {column_to_plot}')
 matplotlib.pyplot.grid(True)
 matplotlib.pyplot.show()
+print('%s min=%s max=%s' % (column_to_plot, str(min(df[column_to_plot])), str(max(df[column_to_plot]))))
 
 column_to_plot = 'sqrtBiasedRandomInt'
 matplotlib.pyplot.hist(df[column_to_plot], edgecolor='black', bins=[x*10-0.5 for x in range(0,101)])
@@ -48,6 +51,7 @@ matplotlib.pyplot.ylabel('Frequency')
 matplotlib.pyplot.title(f'Histogram of {column_to_plot}')
 matplotlib.pyplot.grid(True)
 matplotlib.pyplot.show()
+print('%s min=%s max=%s' % (column_to_plot, str(min(df[column_to_plot])), str(max(df[column_to_plot]))))
 
 column_to_plot = 'randomUnitGaussian'
 matplotlib.pyplot.hist(df[column_to_plot], edgecolor='black', bins=[x*0.1-5.05 for x in range(0,101)])
@@ -56,6 +60,7 @@ matplotlib.pyplot.ylabel('Frequency')
 matplotlib.pyplot.title(f'Histogram of {column_to_plot}')
 matplotlib.pyplot.grid(True)
 matplotlib.pyplot.show()
+print('%s min=%s max=%s' % (column_to_plot, str(min(df[column_to_plot])), str(max(df[column_to_plot]))))
 
 column_to_plot = 'gammaBiasedRandomInt'
 matplotlib.pyplot.hist(df[column_to_plot], edgecolor='black', bins=[x*5-0.5 for x in range(0,101)])
@@ -64,6 +69,7 @@ matplotlib.pyplot.ylabel('Frequency')
 matplotlib.pyplot.title(f'Histogram of {column_to_plot}')
 matplotlib.pyplot.grid(True)
 matplotlib.pyplot.show()
+print('%s min=%s max=%s' % (column_to_plot, str(min(df[column_to_plot])), str(max(df[column_to_plot]))))
 
 
 

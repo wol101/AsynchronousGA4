@@ -11,7 +11,6 @@
 #include "Random.h"
 #include "Genome.h"
 
-#include <iostream>
 #include <cmath>
 #include <memory>
 

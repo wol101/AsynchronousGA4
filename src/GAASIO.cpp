@@ -223,6 +223,13 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
     m_startPopulation.SetSelectionType(m_preferences.parentSelection);
     m_startPopulation.SetParentsToKeep(m_preferences.parentsToKeep);
     m_startPopulation.SetGamma(m_preferences.gamma);
+    m_startPopulation.SetCrossoverChance(m_preferences.crossoverChance);
+    m_startPopulation.SetCrossoverType(m_preferences.crossoverType);
+    m_startPopulation.SetMultipleGaussian(m_preferences.multipleGaussian);
+    m_startPopulation.SetGaussianMutationChance(m_preferences.gaussianMutationChance);
+    m_startPopulation.SetBounceMutation(m_preferences.bounceMutation);
+    m_startPopulation.SetFrameShiftMutationChance(m_preferences.frameShiftMutationChance);
+    m_startPopulation.SetDuplicationMutationChance(m_preferences.duplicationMutationChance);
     m_startPopulation.SetMinimizeScore(m_preferences.minimizeScore);
     if (m_startPopulation.ReadPopulation(m_preferences.startingPopulation.c_str()))
     {
@@ -239,12 +246,12 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
     if (m_startPopulation.GetPopulationSize() != m_preferences.populationSize)
     {
         ReportProgress("Info: Starting population size "s + std::to_string(m_startPopulation.GetPopulationSize()) + " does not match specified population size "s + std::to_string(m_preferences.populationSize), 0);
-        m_startPopulation.ResizePopulation(m_preferences.populationSize, &m_random);
+        m_startPopulation.ResizePopulation(m_preferences.populationSize);
     }
     if (m_preferences.randomiseModel)
     {
         ReportProgress("Info: Randomising starting population", 1);
-        m_startPopulation.Randomise(&m_random);
+        m_startPopulation.Randomise();
     }
 
     if (m_startPopulation.GetGenome(0)->GetGenomeLength() != m_preferences.genomeLength)
@@ -254,7 +261,7 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
     }
     if (m_preferences.randomiseModel)
     {
-        m_startPopulation.Randomise(&m_random);
+        m_startPopulation.Randomise();
     }
 
     m_evolvePopulation.SetGlobalCircularMutation(m_preferences.circularMutation);
@@ -262,6 +269,13 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
     m_evolvePopulation.SetSelectionType(m_preferences.parentSelection);
     m_evolvePopulation.SetParentsToKeep(m_preferences.parentsToKeep);
     m_evolvePopulation.SetGamma(m_preferences.gamma);
+    m_evolvePopulation.SetCrossoverChance(m_preferences.crossoverChance);
+    m_evolvePopulation.SetCrossoverType(m_preferences.crossoverType);
+    m_evolvePopulation.SetMultipleGaussian(m_preferences.multipleGaussian);
+    m_evolvePopulation.SetGaussianMutationChance(m_preferences.gaussianMutationChance);
+    m_evolvePopulation.SetBounceMutation(m_preferences.bounceMutation);
+    m_evolvePopulation.SetFrameShiftMutationChance(m_preferences.frameShiftMutationChance);
+    m_evolvePopulation.SetDuplicationMutationChance(m_preferences.duplicationMutationChance);
     m_evolvePopulation.SetMinimizeScore(m_preferences.minimizeScore);
 
     if (Evolve())
@@ -294,17 +308,12 @@ int GAMain::Evolve()
     uint32_t submitCount = 0;
     uint32_t returnCount = 0;
     int startPopulationIndex = 0;
-    size_t parent1Rank, parent2Rank;
-    int mutationCount;
-    Genome *parent1;
-    Genome *parent2;
     TenPercentiles tenPercentiles;
     double bestFitness = m_preferences.minimizeScore ? std::numeric_limits<double>::max(): -std::numeric_limits<double>::max();
     double lastBestFitness = m_preferences.minimizeScore ? std::numeric_limits<double>::max(): -std::numeric_limits<double>::max();
     std::string filename;
     bool stopSendingFlag = false;
     std::map<uint32_t, std::unique_ptr<RunSpecifier>> runningList;
-    Mating mating(&m_random);
     bool shouldStop = false;
 
     ReportInfo(ToString("Evolve Identifier = %" PRIu64, m_evolveIdentifier));
@@ -389,29 +398,9 @@ int GAMain::Evolve()
             }
             else
             {
-                // create a new offspring
-                mutationCount = 0;
-                while (mutationCount == 0) // this means we always get some mutation (no point in getting unmutated offspring)
-                {
-                    if (m_evolvePopulation.GetPopulationSize()) parent1 = m_evolvePopulation.ChooseParent(&parent1Rank, &m_random);
-                    else parent1 = m_startPopulation.ChooseParent(&parent1Rank, &m_random);
-                    if (m_random.CoinFlip(m_preferences.crossoverChance))
-                    {
-                        if (m_evolvePopulation.GetPopulationSize()) parent2 = m_evolvePopulation.ChooseParent(&parent2Rank, &m_random);
-                        else parent2 = m_startPopulation.ChooseParent(&parent2Rank, &m_random);
-                        offspring = *parent1;
-                        mutationCount += mating.Mate(parent1, parent2, &offspring, m_preferences.crossoverType);
-                    }
-                    else
-                    {
-                        offspring = *parent1;
-                    }
-                    if (m_preferences.multipleGaussian)  mutationCount += mating.MultipleGaussianMutate(&offspring, m_preferences.gaussianMutationChance, m_preferences.bounceMutation);
-                    else mutationCount += mating.GaussianMutate(&offspring, m_preferences.gaussianMutationChance, m_preferences.bounceMutation);
-
-                    mutationCount += mating.FrameShiftMutate(&offspring, m_preferences.frameShiftMutationChance);
-                    mutationCount += mating.DuplicationMutate(&offspring, m_preferences.duplicationMutationChance);
-                }
+                // it is unlikely but possible to get here before any of the genomes in start population have returned
+                if (m_evolvePopulation.GetPopulationSize() > 0) offspring = m_evolvePopulation.GetOffspring();
+                else offspring = m_startPopulation.GetOffspring();
             }
             // got a genome to send
             std::vector<char> dataMessage(sizeof(DataMessage) + offspring.GetGenomeLength() * sizeof(double));

@@ -79,27 +79,27 @@ Population::Population()
 }
 
 // choose a parent from a population
-Genome *Population::ChooseParent(size_t *parentRank, Random *random)
+Genome *Population::ChooseParent(size_t *parentRank)
 {
     switch(m_selectionType)
     {
     // this type biases random choice to higher ranked individuals using the gamma function
     // this assumes a sorted genome
     case GammaBasedSelection:
-        *parentRank = size_t(random->GammaBiasedRandomInt(0, int(m_population.size() - 1), m_gamma));
+        *parentRank = size_t(m_random.GammaBiasedRandomInt(0, int(m_population.size() - 1), m_gamma));
         return m_population[*parentRank].get();
 
     // in this version we do uniform selection and just choose a parent
     // at random
     case UniformSelection:
-        *parentRank = size_t(random->RandomInt(0, int(m_population.size() - 1)));
+        *parentRank = size_t(m_random.RandomInt(0, int(m_population.size() - 1)));
         return m_population[*parentRank].get();
 
     // this type biases random choice to higher ranked individuals
     // this assumes a sorted genome
     // note - the distribution is the same as the old RankBasedSelection
     case SqrtBasedSelection:
-        *parentRank = size_t(random->SqrtBiasedRandomInt(0, int(m_population.size() - 1)));
+        *parentRank = size_t(m_random.SqrtBiasedRandomInt(0, int(m_population.size() - 1)));
         return m_population[*parentRank].get();
     }
     return nullptr;
@@ -128,7 +128,7 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
 #endif
         return std::distance(std::begin(m_population), iter); // so just return the index
     }
-
+    size_t index = std::distance(std::begin(m_population), iter);
     // if a searching element doesn't exist:
     //    if all elements are greater than the searching element: lower_bound() returns an iterator to begin of the range
     //    if all elements are lower than the searching element: lower_bound() returns an iterator to end of the range
@@ -267,17 +267,17 @@ int Population::InsertGenome(std::unique_ptr<Genome> genome, size_t targetPopula
          std::cerr << "Logic error Population::InsertGenome m_ageList.size() + m_immortalList.size() != m_population.size() " << __LINE__ << "\n";
     }
 #endif
-    return 0;
+    return index;
 }
 
 // randomise the population
-void Population::Randomise(Random *random)
+void Population::Randomise()
 {
-    for (auto &&iter : m_population) (*iter).Randomise(random);
+    for (auto &&iter : m_population) (*iter).Randomise(&m_random);
 }
 
 // reset the population size to a new value - needs at least one valid genome in population
-void Population::ResizePopulation(size_t size, Random *random)
+void Population::ResizePopulation(size_t size)
 {
     if (m_population.size() == size) return;
     if (size > m_population.size())
@@ -289,8 +289,8 @@ void Population::ResizePopulation(size_t size, Random *random)
             // fill in with random genomes
             for (size_t i = m_population.size(); i < size; i++)
             {
-                auto g = std::make_unique<Genome>(*ChooseParent(&parentRank, random));
-                g->Randomise(random);
+                auto g = std::make_unique<Genome>(*ChooseParent(&parentRank));
+                g->Randomise(&m_random);
                 if (m_minimizeScore) {g->SetFitness(std::nextafter(m_population.front()->GetFitness(), std::numeric_limits<double>::max()));}
                 else { g->SetFitness(std::nextafter(m_population.front()->GetFitness(), -std::numeric_limits<double>::max())); }
                 InsertGenome(std::move(g), size);
@@ -301,9 +301,14 @@ void Population::ResizePopulation(size_t size, Random *random)
             // fill in with mutated genomes
             for (size_t i = m_population.size(); i < size; i++)
             {
-                auto g = std::make_unique<Genome>(*ChooseParent(&parentRank, random));
-                Mating mating(random);
-                while (mating.GaussianMutate(g.get(), 1.0, true) == 0);
+                auto g = std::make_unique<Genome>(*ChooseParent(&parentRank));
+                Mating mating(&m_random);
+                int mutationCount = 0;
+                while (mutationCount == 0)
+                {
+                    if (m_multipleGaussian)  mutationCount += mating.MultipleGaussianMutate(g.get(), m_gaussianMutationChance, m_bounceMutation);
+                    else mutationCount += mating.GaussianMutate(g.get(), m_gaussianMutationChance, m_bounceMutation);
+                }
                 if (m_minimizeScore) {g->SetFitness(std::nextafter(m_population.front()->GetFitness(), std::numeric_limits<double>::max()));}
                 else { g->SetFitness(std::nextafter(m_population.front()->GetFitness(), -std::numeric_limits<double>::max())); }
                 InsertGenome(std::move(g), size);
@@ -399,3 +404,27 @@ int Population::ReadPopulation(const char *filename)
     return 0;
 }
 
+Genome Population::GetOffspring()
+{
+    Genome offspring;
+    Genome *parent1, *parent2;
+    Mating mating(&m_random);
+    int mutationCount = 0;
+    size_t parent1Rank, parent2Rank;
+    while (mutationCount == 0) // this means we always get some mutation (no point in getting unmutated offspring)
+    {
+        parent1 = ChooseParent(&parent1Rank);
+        offspring = *parent1;
+        if (m_random.CoinFlip(m_crossoverChance))
+        {
+            parent2 = ChooseParent(&parent2Rank);
+            mutationCount += mating.Mate(parent1, parent2, &offspring, m_crossoverType);
+        }
+        if (m_multipleGaussian)  mutationCount += mating.MultipleGaussianMutate(&offspring, m_gaussianMutationChance, m_bounceMutation);
+        else mutationCount += mating.GaussianMutate(&offspring, m_gaussianMutationChance, m_bounceMutation);
+
+        mutationCount += mating.FrameShiftMutate(&offspring, m_frameShiftMutationChance);
+        mutationCount += mating.DuplicationMutate(&offspring, m_duplicationMutationChance);
+    }
+    return offspring;
+}

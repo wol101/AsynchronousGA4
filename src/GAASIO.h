@@ -130,7 +130,6 @@ private:
     int m_tcpPort = 0;
 
     Preferences m_preferences;
-    Random m_random;
 
     ArgParse *m_argParse = nullptr;
 };
