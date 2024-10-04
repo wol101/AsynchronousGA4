@@ -97,10 +97,10 @@ void GAParametersDialog::setEditorText(const QString &newEditorText)
     QDomDocument doc;
     if (!doc.setContent(newEditorText)) return;
     QString doctype = doc.doctype().name();
-    qDebug() << "doctype" << doctype;
+    // qDebug() << "doctype" << doctype;
     QDomElement docElem = doc.documentElement();
     QString docElemTag = docElem.tagName();
-    qDebug() << "docElemTag" << docElemTag;
+    // qDebug() << "docElemTag" << docElemTag;
     if (docElemTag != "ASYNCHRONOUSGA") return;
     QDomNode n = docElem.firstChild();
     while(!n.isNull())
