@@ -376,7 +376,7 @@ int GAMain::Evolve()
             {
                 if (currentTime - it->second->startTime > m_preferences.watchDogTimerLimit)
                 {
-                    ReportProgress(ToString("RunID %" PRIu32 " has been deleted", it->first), 2);
+                    ReportProgress(ToString("RunID %" PRIu32 " has been deleted", it->first), 1);
                     it = runningList.erase(it); // erase invalidates the iterator but returns the next valid iterator
                 }
                 else { it++; }
@@ -446,7 +446,12 @@ int GAMain::Evolve()
             std::string address = ConvertAddressPortToString(messageContent->senderIP, messageContent->senderPort);
             ReportProgress(ToString("Sample %" PRIu32 " score %g from %s evolveIdentifier %" PRIu64, index, result, address.c_str(), messageContent->evolveIdentifier), 2);
             auto iter = runningList.find(index);
-            if (messageContent->evolveIdentifier != m_evolveIdentifier || iter == runningList.end())
+            if (messageContent->evolveIdentifier != m_evolveIdentifier)
+            {
+                ReportProgress(ToString("Sample %" PRIu32 " evolveIdentier mismatch score %g from %s evolveIdentifier %" PRIu64, index, result, address.c_str(), messageContent->evolveIdentifier), 1);
+                continue;
+            }
+            if (iter == runningList.end())
             {
                 ReportProgress(ToString("Sample %" PRIu32 " not found score %g from %s evolveIdentifier %" PRIu64, index, result, address.c_str(), messageContent->evolveIdentifier), 1);
                 continue;
