@@ -102,3 +102,49 @@ target_include_directories(AsynchronousGA4 PRIVATE
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(AsynchronousGA4)
 endif()
+
+if(CMAKE_HOST_WIN32 AND CMAKE_BUILD_TYPE STREQUAL Release) # for release builds make sure all the dlls are in place
+
+add_custom_command(TARGET AsynchronousGA4 POST_BUILD
+
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Widgets.dll" ${CMAKE_CURRENT_BINARY_DIR}
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Gui.dll" ${CMAKE_CURRENT_BINARY_DIR}
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Core.dll" ${CMAKE_CURRENT_BINARY_DIR}
+    # COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_PREFIX_PATH}/plugins" "${CMAKE_CURRENT_BINARY_DIR}/plugins"
+
+    COMMAND "${CMAKE_PREFIX_PATH}/bin/windeployqt.exe" "${CMAKE_CURRENT_BINARY_DIR}/AsynchronousGA4.exe" # this copies the Qt dlls and a fairly minimal set of plugins
+)
+
+endif()
+
+if(CMAKE_HOST_LINUX AND CMAKE_BUILD_TYPE STREQUAL Release) # for release builds make sure all the dlls are in place
+
+add_custom_command(TARGET AsynchronousGA4 POST_BUILD
+
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Widgets.dll" ${CMAKE_CURRENT_BINARY_DIR}
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Gui.dll" ${CMAKE_CURRENT_BINARY_DIR}
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Core.dll" ${CMAKE_CURRENT_BINARY_DIR}
+    # COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_PREFIX_PATH}/plugins" "${CMAKE_CURRENT_BINARY_DIR}/plugins"
+
+    COMMAND "cqtdeployer -bin GaitSym2019" "${CMAKE_CURRENT_BINARY_DIR}/AsynchronousGA4" # this copies the Qt dlls and a fairly minimal set of plugins
+)
+
+endif()
+
+function(dump_cmake_variables)
+    get_cmake_property(_variableNames VARIABLES)
+    list (SORT _variableNames)
+    foreach (_variableName ${_variableNames})
+        if (ARGV0)
+            unset(MATCHED)
+            string(REGEX MATCH ${ARGV0} MATCHED ${_variableName})
+            if (NOT MATCHED)
+                continue()
+            endif()
+        endif()
+        message(STATUS "${_variableName}=${${_variableName}}")
+    endforeach()
+endfunction()
+
+# handy variable dump to General Messages window on QtCreator
+dump_cmake_variables()
