@@ -126,7 +126,7 @@ add_custom_command(TARGET AsynchronousGA4 POST_BUILD
     # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Core.dll" ${CMAKE_CURRENT_BINARY_DIR}
     # COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_PREFIX_PATH}/plugins" "${CMAKE_CURRENT_BINARY_DIR}/plugins"
 
-    COMMAND "cqtdeployer -bin GaitSym2019" "${CMAKE_CURRENT_BINARY_DIR}/AsynchronousGA4" # this copies the Qt dlls and a fairly minimal set of plugins
+    COMMAND "/usr/bin/cqtdeployer" "-bin" "${CMAKE_CURRENT_BINARY_DIR}/AsynchronousGA4" "-qmake" "${CMAKE_PREFIX_PATH}/bin/qmake" # this copies the Qt dlls and a fairly minimal set of plugins
 )
 
 endif()
