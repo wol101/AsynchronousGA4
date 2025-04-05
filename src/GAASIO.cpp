@@ -79,7 +79,7 @@ int main(int argc, const char **argv)
     argparse.Get("--parameterFile"s, &parameterFile);
     argparse.Get("--outputDirectory"s, &outputDirectory);
     argparse.Get("--startingPopulation"s, &startingPopulation);
-    
+
     GAMain ga;
     ga.setArgParse(&argparse);
     ga.SetLogLevel(logLevel);
@@ -376,7 +376,8 @@ int GAMain::Evolve()
             {
                 if (currentTime - it->second->startTime > m_preferences.watchDogTimerLimit)
                 {
-                    ReportProgress(ToString("RunID %" PRIu32 " has been deleted", it->first), 1);
+                    std::string address = ConvertAddressPortToString(it->second->senderIP, it->second->senderPort);
+                    ReportProgress(ToString("RunID %" PRIu32 " host %s has been deleted due to watchdog timer limit", it->first, address.c_str()), 1);
                     it = runningList.erase(it); // erase invalidates the iterator but returns the next valid iterator
                 }
                 else { it++; }
@@ -448,12 +449,12 @@ int GAMain::Evolve()
             auto iter = runningList.find(index);
             if (messageContent->evolveIdentifier != m_evolveIdentifier)
             {
-                ReportProgress(ToString("Sample %" PRIu32 " evolveIdentier mismatch score %g from %s evolveIdentifier %" PRIu64, index, result, address.c_str(), messageContent->evolveIdentifier), 1);
+                ReportProgress(ToString("Sample %" PRIu32 " evolveIdentier mismatch: score %g from %s evolveIdentifier %" PRIu64, index, result, address.c_str(), messageContent->evolveIdentifier), 1);
                 continue;
             }
             if (iter == runningList.end())
             {
-                ReportProgress(ToString("Sample %" PRIu32 " not found score %g from %s evolveIdentifier %" PRIu64, index, result, address.c_str(), messageContent->evolveIdentifier), 1);
+                ReportProgress(ToString("Sample %" PRIu32 " not found: score %g from %s evolveIdentifier %" PRIu64, index, result, address.c_str(), messageContent->evolveIdentifier), 1);
                 continue;
             }
             iter->second->genome.SetFitness(result);
