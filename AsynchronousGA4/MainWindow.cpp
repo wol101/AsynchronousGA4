@@ -590,9 +590,9 @@ void MainWindow::runPostMergeScript()
         return;
     }
     QByteArray stdOut = mergeScript.readAllStandardOutput();
-    if (ui->spinBoxLogLevel->value() > 1) appendProgress(QString::fromStdString(stdOut.toStdString()));
+    if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString::fromStdString(stdOut.toStdString()));
     QByteArray stdError = mergeScript.readAllStandardError();
-    if (ui->spinBoxLogLevel->value() > 1) appendProgress(QString::fromStdString(stdError.toStdString()));
+    if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString::fromStdString(stdError.toStdString()));
 }
 
 void MainWindow::runGaitSym()
@@ -674,9 +674,9 @@ void MainWindow::runGaitSym()
         return;
     }
     QByteArray stdOut = gaitsym.readAllStandardOutput();
-    if (ui->spinBoxLogLevel->value() > 1) appendProgress(QString::fromStdString(stdOut.toStdString()));
+    if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString::fromStdString(stdOut.toStdString()));
     QByteArray stdError = gaitsym.readAllStandardError();
-    if (ui->spinBoxLogLevel->value() > 1) appendProgress(QString::fromStdString(stdError.toStdString()));
+    if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString::fromStdString(stdError.toStdString()));
     QFileInfo modelStateInfo(modelStateFileName);
     if (!modelStateInfo.exists() && !modelStateInfo.isFile())
     {
