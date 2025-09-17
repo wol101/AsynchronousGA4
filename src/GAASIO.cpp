@@ -133,7 +133,12 @@ int GAMain::Process(const std::string &parameterFile, const std::string &outputD
     std::string timeString = std::format("{:%Y-%m-%d_%H.%M.%S}", localSecondsTime);
  #else
     time_t now = time(nullptr);
-    struct tm *local = localtime(&now);
+    struct tm local;
+#ifdef _MSC_VER
+    localtime_s(&now, &local);
+#else
+    localtime_r(&now, &local);
+#endif
     std::string timeString = ToString("%04d-%02d-%02d_%02d.%02d.%02d", local->tm_year + 1900, local->tm_mon + 1, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
  #endif
 
