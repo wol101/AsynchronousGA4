@@ -123,7 +123,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::pushButtonParameterFileClicked()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Select Parameter File"), ui->lineEditParameterFile->text(), tr("Text Files (*.txt *.tab);;Any File (*.* *)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Select Parameter File"), ui->lineEditParameterFile->text(), tr("XML Files (*.xml);;Text Files (*.txt *.tab);;Any File (*.* *)"));
     if (!fileName.isEmpty())
     {
         ui->lineEditParameterFile->setText(fileName);
