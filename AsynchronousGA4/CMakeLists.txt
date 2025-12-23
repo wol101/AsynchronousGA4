@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 
+# set some output folders
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/$<CONFIG>/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/$<CONFIG>/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/$<CONFIG>/lib)
+
 project(AsynchronousGA4 VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
@@ -107,12 +112,12 @@ if(CMAKE_HOST_WIN32 AND CMAKE_BUILD_TYPE STREQUAL Release) # for release builds 
 
 add_custom_command(TARGET AsynchronousGA4 POST_BUILD
 
-    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Widgets.dll" ${CMAKE_CURRENT_BINARY_DIR}
-    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Gui.dll" ${CMAKE_CURRENT_BINARY_DIR}
-    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Core.dll" ${CMAKE_CURRENT_BINARY_DIR}
-    # COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_PREFIX_PATH}/plugins" "${CMAKE_CURRENT_BINARY_DIR}/plugins"
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Widgets.dll" ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Gui.dll" ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Core.dll" ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    # COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_PREFIX_PATH}/plugins" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/plugins"
 
-    COMMAND "${CMAKE_PREFIX_PATH}/bin/windeployqt.exe" "${CMAKE_CURRENT_BINARY_DIR}/AsynchronousGA4.exe" # this copies the Qt dlls and a fairly minimal set of plugins
+    COMMAND "${CMAKE_PREFIX_PATH}/bin/windeployqt.exe" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/AsynchronousGA4.exe" # this copies the Qt dlls and a fairly minimal set of plugins
 )
 
 endif()
@@ -121,12 +126,12 @@ if(CMAKE_HOST_LINUX AND CMAKE_BUILD_TYPE STREQUAL Release) # for release builds 
 
 add_custom_command(TARGET AsynchronousGA4 POST_BUILD
 
-    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Widgets.dll" ${CMAKE_CURRENT_BINARY_DIR}
-    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Gui.dll" ${CMAKE_CURRENT_BINARY_DIR}
-    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Core.dll" ${CMAKE_CURRENT_BINARY_DIR}
-    # COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_PREFIX_PATH}/plugins" "${CMAKE_CURRENT_BINARY_DIR}/plugins"
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Widgets.dll" ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Gui.dll" ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    # COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_PREFIX_PATH}/bin/Qt6Core.dll" ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    # COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_PREFIX_PATH}/plugins" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/plugins"
 
-    COMMAND "/usr/bin/cqtdeployer" "-bin" "${CMAKE_CURRENT_BINARY_DIR}/AsynchronousGA4" "-qmake" "${CMAKE_PREFIX_PATH}/bin/qmake" # this copies the Qt dlls and a fairly minimal set of plugins
+    COMMAND "/usr/bin/cqtdeployer" "-bin" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/AsynchronousGA4" "-qmake" "${CMAKE_PREFIX_PATH}/bin/qmake" # this copies the Qt dlls and a fairly minimal set of plugins
 )
 
 endif()

@@ -58,4 +58,5 @@ compile_commands.json
 
 GaitSymQt/build/
 build
-
+AsynchronousGA4/Release
+AsynchronousGA4/Debug
