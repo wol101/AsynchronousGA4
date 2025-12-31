@@ -84,8 +84,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->doubleSpinBoxOutputCycle, &QDoubleSpinBox::textChanged, this, &MainWindow::spinBoxTextChanged);
     connect(ui->doubleSpinBoxStartValue, &QDoubleSpinBox::textChanged, this, &MainWindow::spinBoxTextChanged);
     connect(ui->doubleSpinBoxStepValue, &QDoubleSpinBox::textChanged, this, &MainWindow::spinBoxTextChanged);
-    connect(ui->checkBoxMergeXMLActivate, &QCheckBox::stateChanged, this, &MainWindow::checkBoxStateChanged);
-    connect(ui->checkBoxCycleTime, &QCheckBox::stateChanged, this, &MainWindow::checkBoxStateChanged);
+    connect(ui->checkBoxMergeXMLActivate, &QCheckBox::checkStateChanged, this, &MainWindow::checkBoxStateChanged);
+    connect(ui->checkBoxCycleTime, &QCheckBox::checkStateChanged, this, &MainWindow::checkBoxStateChanged);
 
     // put a new context menu on the linedit widgets that point to file names
     QList<QLineEdit *> listQLineEdit = this->findChildren<QLineEdit *>(QString(), Qt::FindChildrenRecursively);
@@ -477,12 +477,22 @@ void MainWindow::runMergeXML()
     }
     QString newMergeXML = QDir(outputFolder).filePath("workingMergeXML.txt");
     QFile file(newMergeXML);
-    file.open(QFile::WriteOnly);
+    if (!file.open(QFile::WriteOnly))
+    {
+        QMessageBox::warning(this, QString("Open File Error %1").arg(newMergeXML), file.errorString());
+        activateButtons();
+        return;
+    }
     file.write(replace5.toUtf8());
     file.close();
     QString mergeXMLStatusFile = QDir(outputFolder).filePath("mergeXMLStatus.txt");
     QFile file2(mergeXMLStatusFile);
-    file2.open(QFile::WriteOnly);
+    if (!file2.open(QFile::WriteOnly))
+    {
+        QMessageBox::warning(this, QString("Open File Error %1").arg(newMergeXML), file.errorString());
+        activateButtons();
+        return;
+    }
     QTextStream stream(&file2);
     double outputCycle = ui->doubleSpinBoxOutputCycle->value();
     bool cycle = ui->checkBoxCycleTime->isChecked();
