@@ -600,9 +600,9 @@ void MainWindow::runPostMergeScript()
         return;
     }
     QByteArray stdOut = mergeScript.readAllStandardOutput();
-    if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString::fromStdString(stdOut.toStdString()));
+    appendProgress(QString::fromStdString(stdOut.toStdString()));
     QByteArray stdError = mergeScript.readAllStandardError();
-    if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString::fromStdString(stdError.toStdString()));
+    appendProgress(QString::fromStdString(stdError.toStdString()));
 }
 
 void MainWindow::runGaitSym()

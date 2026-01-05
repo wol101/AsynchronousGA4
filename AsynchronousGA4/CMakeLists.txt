@@ -29,6 +29,7 @@ set(PROJECT_SOURCES
     main.cpp
 
     BasicXMLSyntaxHighlighter.h
+    ClearablePlainTextEdit.h
     GAParametersDialog.h
     MainWindow.h
     MergeUtil.h
