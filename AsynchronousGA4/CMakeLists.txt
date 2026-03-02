@@ -100,6 +100,7 @@ install(TARGETS AsynchronousGA4
 )
 
 target_include_directories(AsynchronousGA4 PRIVATE
+    .
     ../pocketpy
     ../pystring
     ../rapidxml-1.13
