@@ -648,8 +648,13 @@ void GAMain::ReportProgress(const std::string &message, int logLevel)
         std::string timeString = std::format("{:%Y-%m-%d %H.%M.%S }", localSecondsTime);
 #else
         time_t now = time(nullptr);
-        struct tm *local = localtime(&now);
-        std::string timeString = ToString("%04d-%02d-%02d %02d.%02d.%02d ", local->tm_year + 1900, local->tm_mon + 1, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
+        struct tm local;
+#ifdef _MSC_VER
+        localtime_s(&now, &local);
+#else
+        localtime_r(&now, &local);
+#endif
+        std::string timeString = ToString("%04d-%02d-%02d %02d.%02d.%02d ", local.tm_year + 1900, local.tm_mon + 1, local.tm_mday, local.tm_hour, local.tm_min, local.tm_sec);
 #endif
         std::cout << timeString << message << "\n";
         std::cout.flush();
@@ -658,16 +663,7 @@ void GAMain::ReportProgress(const std::string &message, int logLevel)
 
 void GAMain::ReportInfo(const std::string &message)
 {
-#if ( __GNUC__ >= 14 ) || ( _MSC_VER >= 1929 ) // these versions required for std::format and std::chrono::current_zone support for C++20
-    auto currentTime = std::chrono::system_clock::now();
-    auto localSecondsTime = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(currentTime)); //needs to be cast to seconds otherwise %S has decimal digits
-    std::string timeString = std::format("{:%Y-%m-%d %H.%M.%S }", localSecondsTime);
-#else
-    time_t now = time(nullptr);
-    struct tm *local = localtime(&now);
-    std::string timeString = ToString("%04d-%02d-%02d %02d.%02d.%02d ", local->tm_year + 1900, local->tm_mon + 1, local->tm_mday, local->tm_hour, local->tm_min, local->tm_sec);
-#endif
-    std::cerr << timeString << message << "\n";
+    std::cerr << message << "\n";
     std::cerr.flush();
 }
 
