@@ -5,6 +5,11 @@ project(AsynchronousGA4CL LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# options for static build
+set(BUILD_SHARED_LIBS OFF)
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+set(CMAKE_EXE_LINKER_FLAGS "-static")
+
 add_executable(AsynchronousGA4CL
     ../src/ArgParse.cpp
     ../src/DataFile.cpp
@@ -51,3 +56,6 @@ if (MSVC)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS _WINSOCK_DEPRECATED_NO_WARNINGS _WIN32_WINNT=_WIN32_WINNT_WIN7)
 endif ()
 
+# options for static build
+set_target_properties(AsynchronousGA4CL PROPERTIES LINK_SEARCH_START_STATIC TRUE)
+set_target_properties(AsynchronousGA4CL PROPERTIES LINK_SEARCH_END_STATIC TRUE)
