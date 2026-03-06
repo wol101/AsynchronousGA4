@@ -5,10 +5,19 @@ project(AsynchronousGA4CL LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# try to maximise portability
+set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -march=x86-64 -mtune=generic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64 -mtune=generic")
+set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
+add_link_options(-no-pie)
+
 # options for static build
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 set(CMAKE_EXE_LINKER_FLAGS "-static")
+add_link_options(-static-libgcc -static-libstdc++)
+set(CMAKE_EXE_LINK_DYNAMIC_C_FLAGS "")   # remove -rdynamic
+set(CMAKE_EXE_LINK_DYNAMIC_CXX_FLAGS "")
 
 add_executable(AsynchronousGA4CL
     ../src/ArgParse.cpp
