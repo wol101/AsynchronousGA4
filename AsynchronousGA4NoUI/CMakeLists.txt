@@ -7,7 +7,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/$<CONFIG>/lib)
 
 project(AsynchronousGA4NoUI VERSION 0.1 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
@@ -17,14 +17,12 @@ add_executable(AsynchronousGA4NoUI
     ../AsynchronousGA4/XMLContainerList.cpp
     ../AsynchronousGA4/XMLConverter.cpp
     main.cpp
-    Wrapper.cpp
 
     ../AsynchronousGA4/MergeUtil.h
     ../AsynchronousGA4/MergeXML.h
     ../AsynchronousGA4/XMLContainer.h
     ../AsynchronousGA4/XMLContainerList.h
     ../AsynchronousGA4/XMLConverter.h
-    Wrapper.h
 
     ../pocketpy/pocketpy.h
     ../pystring/pystring.cpp
