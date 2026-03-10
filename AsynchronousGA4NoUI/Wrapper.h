@@ -34,6 +34,8 @@ public:
     static std::string runCommand(const std::string& program, const std::vector<std::string>& args, int *exitStatus);
     static std::vector<std::filesystem::path> listFilesMatching(const std::filesystem::path& folder, const std::regex& pattern);
     static bool isExecutableFile(const std::filesystem::path& p);
+    static std::string readFile(const std::string &path, std::string *errorMessage);
+
 
 private:
 
@@ -60,6 +62,10 @@ private:
     std::string m_startingPopulationFile;
     int m_logLevel = 1;
     int serverPort = 8086;
+
+    std::string m_driverFile;
+    std::string m_workingFolder;
+    std::string m_mergeXMLFile;
 
     std::string m_gaExecutable;
     std::string m_gaitSymExecutable;

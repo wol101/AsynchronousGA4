@@ -7,6 +7,7 @@
 #include "pystring.h"
 
 #include <filesystem>
+#include <cstdio>
 
 #if defined(_WIN32)
 #include <algorithm>
@@ -14,8 +15,6 @@
 #include <unistd.h>
 #endif
 
-#include <cstdio>
-#include <memory>
 
 
 using namespace std::string_literals;
@@ -32,7 +31,9 @@ void Wrapper::runGA()
                                        "--outputDirectory", m_outputFolder,
                                        "--serverPort", std::to_string(serverPort),
                                        "--logLevel", std::to_string(m_logLevel)};
-    int status = runCommand(m_gaExecutable, arguments);
+    int status;
+    std::string output = runCommand(m_gaExecutable, arguments, &status);
+    std::cerr << output;
     if (status)
     {
         std::cerr << "Error " << status << " running: " << m_gaExecutable << pystring::join(" "s, arguments) << "\n";
@@ -61,87 +62,38 @@ void Wrapper::runMergeXML()
         {
             // get the population and config from the output of the previous runGA
             runGaitSym(); // run gaitsym and generate ModelState.xml
-            std::string outputFolder = ui->lineEditOutputFolder->text();
-            QDir dir(outputFolder);
-            lastConfig = dir.filePath("ModelState.xml");
-            if (dir.exists("ModelState.xml") == false)
+            std::filesystem::path outputFolder(m_outputFolder);
+            std::filesystem::path lastConfig = (outputFolder / "ModelState.xml");
+            m_lastConfig = std::filesystem::absolute(lastConfig).string();
+            if (!std::filesystem::exists(lastConfig))
             {
-                m_mergeXMLTimer->stop();
-                m_runMergeXML = 0;
-                if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("MergeXML: Unable to find ModelState.xml in:\n%1").arg(outputFolder));
-                QMessageBox::warning(this, tr("Directory Read Error"), std::string("MergeXML: Unable to find ModelState.xml in:\n%1").arg(outputFolder));
-                activateButtons();
-                return;
+                std::cerr << "Error: MergeXML: Unable to find ModelState.xml in: \"" << m_outputFolder << "\"\n";
+                exit(1);
             }
-            std::stringList files = dir.entryList(std::stringList() << "Population*.txt", QDir::Files, QDir::Name);
-            if (files.isEmpty())
+            std::vector<std::filesystem::path> files = listFilesMatching(outputFolder, std::regex("^Population.*.txt$"));
+            if (files.size() == 0)
             {
-                m_mergeXMLTimer->stop();
-                m_runMergeXML = 0;
-                if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("MergeXML: Unable to find Population*.txt in:\n%1").arg(outputFolder));
-                QMessageBox::warning(this, tr("Directory Read Error"), std::string("MergeXML: Unable to find Population*.txt in:\n%1").arg(outputFolder));
-                activateButtons();
-                return;
+                std::cerr << "Error: MergeXML: Unable to find Population*.txt in: \"" << m_outputFolder << "\"\n";
+                exit(1);
             }
-            lastPopulation = dir.filePath(files.last());
+
+            m_lastPopulation = files.back().string();
             m_currentLoopCount++;
-            m_currentLoopValue += stepValue;
-            if (stepValue >= 0 && (m_currentLoopValue > endValue || fabs(m_currentLoopValue - endValue) < fabs(stepValue) * 0.001)) m_currentLoopValue = endValue;
-            if (stepValue < 0 && (m_currentLoopValue < endValue || fabs(m_currentLoopValue - endValue) < fabs(stepValue) * 0.001)) m_currentLoopValue = endValue;
+            m_currentLoopValue += m_stepValue;
+            if (m_stepValue >= 0 && (m_currentLoopValue > m_endValue || fabs(m_currentLoopValue - m_endValue) < fabs(m_stepValue) * 0.0001)) m_currentLoopValue = m_endValue;
+            if (m_stepValue < 0 && (m_currentLoopValue < m_endValue || fabs(m_currentLoopValue - m_endValue) < fabs(m_stepValue) * 0.0001)) m_currentLoopValue = m_endValue;
         }
 
-    }
 
-
-    else
+    std::filesystem::path driverFile(m_driverFile);
+    std::filesystem::path workingFolder(m_workingFolder);
+    std::string errorMessage;
+    std::string mergeXMLCommands = readFile(m_mergeXMLFile, &errorMessage);
+    if (!errorMessage.empty())
     {
-        // get the population and config from the output of the previous runGA
-        runGaitSym(); // run gaitsym and generate ModelState.xml
-        std::string outputFolder = ui->lineEditOutputFolder->text();
-        QDir dir(outputFolder);
-        lastConfig = dir.filePath("ModelState.xml");
-        if (dir.exists("ModelState.xml") == false)
-        {
-            m_mergeXMLTimer->stop();
-            m_runMergeXML = 0;
-            if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("MergeXML: Unable to find ModelState.xml in:\n%1").arg(outputFolder));
-            QMessageBox::warning(this, tr("Directory Read Error"), std::string("MergeXML: Unable to find ModelState.xml in:\n%1").arg(outputFolder));
-            activateButtons();
-            return;
-        }
-        std::stringList files = dir.entryList(std::stringList() << "Population*.txt", QDir::Files, QDir::Name);
-        if (files.isEmpty())
-        {
-            m_mergeXMLTimer->stop();
-            m_runMergeXML = 0;
-            if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("MergeXML: Unable to find Population*.txt in:\n%1").arg(outputFolder));
-            QMessageBox::warning(this, tr("Directory Read Error"), std::string("MergeXML: Unable to find Population*.txt in:\n%1").arg(outputFolder));
-            activateButtons();
-            return;
-        }
-        lastPopulation = dir.filePath(files.last());
-        m_currentLoopCount++;
-        m_currentLoopValue += stepValue;
-        if (stepValue >= 0 && (m_currentLoopValue > endValue || fabs(m_currentLoopValue - endValue) < fabs(stepValue) * 0.001)) m_currentLoopValue = endValue;
-        if (stepValue < 0 && (m_currentLoopValue < endValue || fabs(m_currentLoopValue - endValue) < fabs(stepValue) * 0.001)) m_currentLoopValue = endValue;
+        std::cerr << "Error: MergeXML: Unable to open file:\"" << m_mergeXMLFile
+        exit(1);
     }
-    ui->lineEditCurrentLoopValue->setText(std::string::number(m_currentLoopValue, 'f', 3));
-    ui->lineEditCurrentLoopCount->setText(std::string::number(m_currentLoopCount, 'f', 3));
-    QFileInfo driverFile(ui->lineEditDriverFile->text());
-    QFileInfo workingFolder(ui->lineEditWorkingFolder->text());
-    QFile mergeXMLFile(ui->lineEditMergeXMLFile->text());
-    if (mergeXMLFile.open(QFile::ReadOnly) == false)
-    {
-        m_mergeXMLTimer->stop();
-        m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("MergeXML: Unable to open file:\n%1").arg(ui->lineEditMergeXMLFile->text()));
-        QMessageBox::warning(this, tr("Open File Error"), std::string("MergeXML: Unable to open file:\n%1").arg(ui->lineEditMergeXMLFile->text()));
-        activateButtons();
-        return;
-    }
-    QByteArray mergeXMLFileData = mergeXMLFile.readAll();
-    mergeXMLFile.close();
-    std::string mergeXMLCommands = std::string::fromUtf8(mergeXMLFileData);
     QDateTime time = QDateTime::currentDateTime();
     std::string subFolder(std::string("%1_Run_%2").arg(m_currentLoopCount, 4, 10, QChar('0')).arg(time.toString("yyyy-MM-dd_HH.mm.ss")));
     std::string outputFolder = QDir(workingFolder.absoluteFilePath()).filePath(subFolder);
@@ -1413,4 +1365,41 @@ bool Wrapper::isExecutableFile(const std::filesystem::path& p)
     return ::access(p.c_str(), X_OK) == 0;
 #endif
 }
+
+std::string Wrapper::readFile(const std::string &path, std::string *errorMessage)
+{
+    std::string result;
+    // Open the stream to 'lock' the file.
+    std::ifstream file(path, std::ios::in | std::ios::binary);
+    if (!file.is_open())
+    {
+        if (errorMessage)
+        {
+            switch (errno)
+            {
+            case ENOENT: *errorMessage = "File Not Found"; break;
+            case EACCES: *errorMessage = "Permission Denied"; break;
+            case EISDIR: *errorMessage = "Is Directory"; break;
+            default:     *errorMessage = "Unknown Error"; break;
+            }
+        }
+        return result;
+    }
+
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    result = ss.str();
+
+    if (file.bad())
+    {
+        if (errorMessage) { *errorMessage = "I/O error while reading file: " + path; }
+        result.errorCode    = FileReadError::ReadError;
+        result.errorMessage = "I/O error while reading file: " + path;
+        return result;
+    }
+
+    return result;
+}
+
+
 
