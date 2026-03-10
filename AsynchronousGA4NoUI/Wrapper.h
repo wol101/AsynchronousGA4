@@ -2,27 +2,10 @@
 #define WRAPPER_H
 
 #include <sstream>
-#include <iostream>
 #include <chrono>
 #include <filesystem>
 #include <regex>
 #include <vector>
-
-// simple guard class for std::cerr stream capture
-class cerrRedirect
-{
-public:
-    cerrRedirect(std::streambuf *newBuffer)
-    {
-        oldBuffer = std::cerr.rdbuf(newBuffer);
-    }
-    ~cerrRedirect()
-    {
-        std::cerr.rdbuf(oldBuffer);
-    }
-private:
-    std::streambuf *oldBuffer;
-};
 
 class Wrapper
 {
@@ -36,6 +19,8 @@ public:
     static bool isExecutableFile(const std::filesystem::path& p);
     static std::string readFile(const std::string &path, std::string *errorMessage);
     static std::string toString(const char * const printfFormatString, ...);
+    static std::filesystem::path existsOnPath(const std::string& filename);
+    static bool toBool(const std::string& s, bool *valid = 0);
 
 
 private:
@@ -59,10 +44,11 @@ private:
     double m_stepValue = 1;
     double m_endValue = 10;
     double m_outputCycle = 0;
-    bool m_cycleFlag = false;
+    bool m_mergeXMLActivate = false;
+    bool m_cycle = false;
 
     int m_logLevel = 1;
-    int m_serverPort = 8086;
+    int m_portNumber = 8086;
 
     double m_currentLoopValue = 0;
     int m_currentLoopCount = 0;
@@ -73,17 +59,11 @@ private:
     std::string m_endExpressionMarker = {"]]"};
 
     void runPostMergeScript();
-
     void runGA();
     void runGaitSym();
     void openFile(const std::string &fileName);
     void runMergeXML();
-    void readStandardError();
-    void readStandardOutput();
 
-
-    std::stringstream m_capturedCerr;
-    std::unique_ptr<cerrRedirect> m_redirect;
 
 };
 

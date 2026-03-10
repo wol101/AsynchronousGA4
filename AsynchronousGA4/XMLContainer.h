@@ -49,6 +49,8 @@ public:
 
     int Merge(rapidxml::xml_node<char> *node1, rapidxml::xml_node<char> *node2, double proportion, const char *name, int startIndex, int endIndex);
 
+    char *DoXmlGetProp(const char *element, const char *idAttribute, const char *idValue, const char *name);
+
 private:
     rapidxml::xml_document<char> *m_doc = nullptr;
     std::vector<char> m_xmlDataStore;

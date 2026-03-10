@@ -837,6 +837,46 @@ rapidxml::xml_node<char> *XMLContainer::CreateNewNode(rapidxml::xml_node<char> *
     return child;
 }
 
+// idAttribue can be 0 and then the first matching tag is reported
+// idValue can also be '*' to match anything
+char* XMLContainer::DoXmlGetProp(const char *element, const char *idAttribute, const char *idValue, const char *name)
+{
+    std::string tagToChange;
+    rapidxml::xml_node<char> *localNodePtr;
+    unsigned int localTagIndex;
+    char *localBuf;
+
+    tagToChange = element;
+
+    // now look for the element
+    for (localTagIndex = 0; localTagIndex < m_tagContentsList.size(); localTagIndex++)
+    {
+        localNodePtr = m_tagContentsList[localTagIndex];
+        if (strcmp(tagToChange.c_str(), localNodePtr->name()) == 0) // name match
+        {
+            if (idAttribute)
+            {
+                localBuf = DoXmlGetProp(localNodePtr, idAttribute);
+                if (localBuf)
+                {
+                    if (strcmp(idValue, localBuf) == 0 || strcmp(idValue, "*") == 0) // allow any match with '*'
+                    {
+                        localBuf = DoXmlGetProp(localNodePtr, name);
+                        return localBuf;
+                    }
+                }
+            }
+            else
+            {
+                localBuf = DoXmlGetProp(localNodePtr, name);
+                return localBuf;
+            }
+        }
+    }
+
+    return 0;
+}
+
 
 #if defined(RAPIDXML_NO_EXCEPTIONS)
 // this is the required rapidxml error handler when RAPIDXML_NO_EXCEPTIONS is used to disable exceptions

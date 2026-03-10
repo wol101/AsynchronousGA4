@@ -61,3 +61,5 @@ build
 AsynchronousGA4/Release
 AsynchronousGA4/Debug
 singularity/asynchronousga4cl_container.sif
+AsynchronousGA4NoUI/Debug
+AsynchronousGA4NoUI/Release
