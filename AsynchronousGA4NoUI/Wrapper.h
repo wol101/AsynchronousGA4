@@ -4,6 +4,9 @@
 #include <sstream>
 #include <iostream>
 #include <chrono>
+#include <filesystem>
+#include <regex>
+#include <vector>
 
 // simple guard class for std::cerr stream capture
 class cerrRedirect
@@ -27,22 +30,20 @@ class Wrapper
 public:
     explicit Wrapper();
 
-    void run();
-
     static std::string shellEscape(const std::string& arg);
-    static int runCommand(const std::string& program, const std::vector<std::string>& args);
-
+    static std::string runCommand(const std::string& program, const std::vector<std::string>& args, int *exitStatus);
+    static std::vector<std::filesystem::path> listFilesMatching(const std::filesystem::path& folder, const std::regex& pattern);
+    static bool isExecutableFile(const std::filesystem::path& p);
 
 private:
-    std::string convertToRelativePath(const std::string &filename);
-    std::string convertToAbsolutePath(const std::string &filename);
-    std::string existsOnPath(const std::string &filename);
 
     double m_startValue =0;
     double m_stepValue = 1;
     double m_endValue = 10;
     std::string m_modelPopulationFile;
     std::string m_modelConfigurationFile;
+    double m_outputCycle = 0;
+    bool m_cycleFlag = false;
 
     double m_currentLoopValue = 0;
     int m_currentLoopCount = 0;
@@ -50,7 +51,6 @@ private:
     int m_lastResultsNumber = -1;
     std::string m_lastPopulation;
     std::string m_lastConfig;
-
 
     std::string m_asynchronousGAFileName;
 
@@ -61,7 +61,8 @@ private:
     int m_logLevel = 1;
     int serverPort = 8086;
 
-    std::string gaExecutable;
+    std::string m_gaExecutable;
+    std::string m_gaitSymExecutable;
 
     std::string m_startExpressionMarker = {"[["};
     std::string m_endExpressionMarker = {"]]"};

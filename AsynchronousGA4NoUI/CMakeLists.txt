@@ -17,12 +17,14 @@ add_executable(AsynchronousGA4NoUI
     ../AsynchronousGA4/XMLContainerList.cpp
     ../AsynchronousGA4/XMLConverter.cpp
     main.cpp
+    Wrapper.cpp
 
     ../AsynchronousGA4/MergeUtil.h
     ../AsynchronousGA4/MergeXML.h
     ../AsynchronousGA4/XMLContainer.h
     ../AsynchronousGA4/XMLContainerList.h
     ../AsynchronousGA4/XMLConverter.h
+    Wrapper.h
 
     ../pocketpy/pocketpy.h
     ../pystring/pystring.cpp

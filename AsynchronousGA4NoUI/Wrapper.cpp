@@ -6,56 +6,22 @@
 
 #include "pystring.h"
 
+#include <filesystem>
+
+#if defined(_WIN32)
+#include <algorithm>
+#else
+#include <unistd.h>
+#endif
+
+#include <cstdio>
+#include <memory>
+
+
 using namespace std::string_literals;
 
 Wrapper::Wrapper()
 {
-}
-
-void Wrapper::run()
-{
-    m_currentLoopValue = m_startValue;
-    m_currentLoopCount = 0;
-    m_lastPopulation = m_modelPopulationFile;
-    m_lastConfig = m_modelConfigurationFile;
-
-
-
-    while (true)
-    {
-        runGaitSym(); // run gaitsym and generate ModelState.xml
-        runMergeXML();
-        runGA();
-        runPostMergeScript();
-        std::string outputFolder = ui->lineEditOutputFolder->text();
-        QDir dir(outputFolder);
-        lastConfig = dir.filePath("ModelState.xml");
-        if (dir.exists("ModelState.xml") == false)
-        {
-            m_mergeXMLTimer->stop();
-            m_runMergeXML = 0;
-            if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("MergeXML: Unable to find ModelState.xml in:\n%1").arg(outputFolder));
-            QMessageBox::warning(this, tr("Directory Read Error"), std::string("MergeXML: Unable to find ModelState.xml in:\n%1").arg(outputFolder));
-            activateButtons();
-            return;
-        }
-        std::stringList files = dir.entryList(std::stringList() << "Population*.txt", QDir::Files, QDir::Name);
-        if (files.isEmpty())
-        {
-            m_mergeXMLTimer->stop();
-            m_runMergeXML = 0;
-            if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("MergeXML: Unable to find Population*.txt in:\n%1").arg(outputFolder));
-            QMessageBox::warning(this, tr("Directory Read Error"), std::string("MergeXML: Unable to find Population*.txt in:\n%1").arg(outputFolder));
-            activateButtons();
-            return;
-        }
-        lastPopulation = dir.filePath(files.last());
-        m_currentLoopCount++;
-        m_currentLoopValue += stepValue;
-        if (stepValue >= 0 && (m_currentLoopValue > endValue || fabs(m_currentLoopValue - endValue) < fabs(stepValue) * 0.001)) m_currentLoopValue = endValue;
-        if (stepValue < 0 && (m_currentLoopValue < endValue || fabs(m_currentLoopValue - endValue) < fabs(stepValue) * 0.001)) m_currentLoopValue = endValue;
-    }
-
 }
 
 void Wrapper::runGA()
@@ -66,37 +32,67 @@ void Wrapper::runGA()
                                        "--outputDirectory", m_outputFolder,
                                        "--serverPort", std::to_string(serverPort),
                                        "--logLevel", std::to_string(m_logLevel)};
-    int status = runCommand(gaExecutable, arguments);
+    int status = runCommand(m_gaExecutable, arguments);
     if (status)
     {
-        std::cerr << "Error " << status << " running: " << gaExecutable << pystring::join(" "s, arguments) << "\n";
+        std::cerr << "Error " << status << " running: " << m_gaExecutable << pystring::join(" "s, arguments) << "\n";
         std::exit(status);
     }
 }
 
 void Wrapper::runMergeXML()
 {
-    if ((m_stepValue >= 0 && m_currentLoopValue >= m_endValue) || (m_stepValue < 0 && m_currentLoopValue <= m_endValue))
+    std::cerr << "Running MergeXML\n";
+    // get the population and config from the models
+    m_lastPopulation = std::filesystem::absolute(std::filesystem::path{m_modelPopulationFile}).string();
+    m_lastConfig = std::filesystem::absolute(std::filesystem::path{m_modelConfigurationFile}).string();
+    m_currentLoopValue = m_startValue;
+    m_currentLoopCount = 0;
+
+    while (true)
     {
-        std::cerr << "Finished loop\n";
-        std::exit(0);
+        if ((m_stepValue >= 0 && m_currentLoopValue >= m_endValue) || (m_stepValue < 0 && m_currentLoopValue <= m_endValue))
+        {
+            std::cerr << "Finished loop\n";
+            std::exit(0);
+        }
+
+        if (m_currentLoopCount)
+        {
+            // get the population and config from the output of the previous runGA
+            runGaitSym(); // run gaitsym and generate ModelState.xml
+            std::string outputFolder = ui->lineEditOutputFolder->text();
+            QDir dir(outputFolder);
+            lastConfig = dir.filePath("ModelState.xml");
+            if (dir.exists("ModelState.xml") == false)
+            {
+                m_mergeXMLTimer->stop();
+                m_runMergeXML = 0;
+                if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("MergeXML: Unable to find ModelState.xml in:\n%1").arg(outputFolder));
+                QMessageBox::warning(this, tr("Directory Read Error"), std::string("MergeXML: Unable to find ModelState.xml in:\n%1").arg(outputFolder));
+                activateButtons();
+                return;
+            }
+            std::stringList files = dir.entryList(std::stringList() << "Population*.txt", QDir::Files, QDir::Name);
+            if (files.isEmpty())
+            {
+                m_mergeXMLTimer->stop();
+                m_runMergeXML = 0;
+                if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("MergeXML: Unable to find Population*.txt in:\n%1").arg(outputFolder));
+                QMessageBox::warning(this, tr("Directory Read Error"), std::string("MergeXML: Unable to find Population*.txt in:\n%1").arg(outputFolder));
+                activateButtons();
+                return;
+            }
+            lastPopulation = dir.filePath(files.last());
+            m_currentLoopCount++;
+            m_currentLoopValue += stepValue;
+            if (stepValue >= 0 && (m_currentLoopValue > endValue || fabs(m_currentLoopValue - endValue) < fabs(stepValue) * 0.001)) m_currentLoopValue = endValue;
+            if (stepValue < 0 && (m_currentLoopValue < endValue || fabs(m_currentLoopValue - endValue) < fabs(stepValue) * 0.001)) m_currentLoopValue = endValue;
+        }
+
     }
 
-    if (ui->spinBoxLogLevel->value() > 0) appendProgress("Running MergeXML");
-    ui->statusBar->showMessage("Running MergeXML");
-    std::string lastPopulation;
-    std::string lastConfig;
-    if (m_runMergeXML == 1)
-    {
-        // get the population and config from the models
-        m_runMergeXML = 2;
-        QFileInfo modelConfigurationFile(ui->lineEditModelConfigurationFile->text());
-        QFileInfo modelPopulationFile(ui->lineEditModelPopulationFile->text());
-        lastPopulation = modelPopulationFile.absoluteFilePath();
-        lastConfig = modelConfigurationFile.absoluteFilePath();
-        m_currentLoopValue = startValue;
-        m_currentLoopCount = 0;
-    }
+
     else
     {
         // get the population and config from the output of the previous runGA
@@ -327,95 +323,61 @@ void Wrapper::runPostMergeScript()
 
 void Wrapper::runGaitSym()
 {
-    if (ui->spinBoxLogLevel->value() > 0) appendProgress("Running GaitSym");
-    ui->statusBar->showMessage("Running GaitSym");
-    double outputCycle = ui->doubleSpinBoxOutputCycle->value();
-    bool cycleFlag = ui->checkBoxCycleTime->isChecked();
-    std::string outputFolder = ui->lineEditOutputFolder->text();
-    QDir dir(outputFolder);
-    std::stringList files = dir.entryList(std::stringList() << "BestGenome*.txt", QDir::Files, QDir::Name);
+    std::cerr << "Running GaitSym\n";
+    std::filesystem::path dir(m_outputFolder);
+    std::vector<std::filesystem::path> files = listFilesMatching(dir, std::regex("^BestGenome*.txt$"));
     if (files.size() < 1)
     {
-        tryToStopGA();
-        m_mergeXMLTimer->stop();
-        m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("runGaitSym: Unable to find BestGenome*.txt"));
-        QMessageBox::warning(this, tr("Run GaitSym Error"), std::string("runGaitSym: Unable to find BestGenome*.txt"));
-        return;
+        std::cerr << "Error: runGaitSym: Unable to find BestGenome*.txt\n";
+        std::exit(1);
     }
-    std::string inputGenome = dir.filePath(files.last());
-    std::string inputXML = dir.filePath("workingConfig.xml");
-    QFileInfo inputGenomeFile(inputGenome);
-    std::string outputXML = dir.filePath(inputGenomeFile.completeBaseName() + std::string(".xml"));
+    std::filesystem::path inputGenome = files.back();
+    std::filesystem::path inputXML = dir / "workingConfig.xml";
+    std::filesystem::path outputXML = inputGenome;
+    outputXML.replace_extension(".xml");
     std::vector<double> genes, lowBounds, highBounds, gaussianSDs;
     std::vector<int> circularMutationFlags;
     double fitness;
     int genomeType;
-    MergeUtil::readGenome(inputGenome.toStdString(), &genes, &lowBounds, &highBounds, &gaussianSDs, &circularMutationFlags, &fitness, &genomeType);
+    MergeUtil::readGenome(inputGenome.string(), &genes, &lowBounds, &highBounds, &gaussianSDs, &circularMutationFlags, &fitness, &genomeType);
     XMLConverter xmlConverter;
-    xmlConverter.LoadBaseXMLFile(inputXML.toStdString());
+    xmlConverter.LoadBaseXMLFile(inputXML.string());
     xmlConverter.ApplyGenome(genes);
     std::string formattedXML;
     xmlConverter.GetFormattedXML(&formattedXML);
-    std::ofstream outputXMLFile(outputXML.toStdString(), std::ios::binary);
+    std::ofstream outputXMLFile(outputXML, std::ios::binary);
     outputXMLFile.write(formattedXML.data(), formattedXML.size());
     outputXMLFile.close();
 
-    std::string modelStateFileName = dir.filePath("ModelState.xml");
-    std::string gaitSymExecutable = ui->lineEditGaitSymExecutable->text();
-    QFileInfo gaitSymExecutableInfo(gaitSymExecutable);
-    bool gaitSymExecutableValid = false;
-    if (gaitSymExecutableInfo.exists() && gaitSymExecutableInfo.isFile() && gaitSymExecutableInfo.isExecutable()) gaitSymExecutableValid = true;
-    if (!gaitSymExecutableValid)
+    std::filesystem::path modelStateFileName = dir / "ModelState.xml";
+    std::filesystem::path gaitSymExecutable(m_gaitSymExecutable);
+    if (!isExecutableFile(gaitSymExecutable))
     {
-        tryToStopGA();
-        m_mergeXMLTimer->stop();
-        m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("runGaitSym: Unable to find \"%1\"").arg(gaitSymExecutable));
-        QMessageBox::warning(this, tr("Run GaitSym Error"), std::string("runGaitSym: Unable to find \"%1\"").arg(gaitSymExecutable));
+        std::cerr << "Error: runGaitSym: Unable to run \"" << std::filesystem::absolute(gaitSymExecutable) << "\"\n";
+        std::exit(1);
+    }
+    std::vector<std::string> arguments;
+    arguments.push_back("--config");
+    arguments.push_back(outputXML.string());
+    if (m_cycleFlag) arguments.push_back("--outputModelStateAtCycle");
+    else arguments.push_back("--outputModelStateAtTime");
+    char buffer[64]; int precision = 17;
+    std::snprintf(buffer, sizeof(buffer), "%.*g", precision, m_outputCycle); // %g conversion needs to use the C functions
+    arguments.push_back(buffer);
+    arguments.push_back("--modelState");
+    arguments.push_back(modelStateFileName.string());
+    int exitStatus;
+    std::string output = runCommand(m_gaitSymExecutable, arguments, &exitStatus);
+    std::cerr << output;
+    if (exitStatus)
+    {
+        std::cerr << "Error: runGaitSym: fail running \"" << gaitSymExecutable << "\"\n";
         return;
     }
-    std::stringList arguments;
-    std::string outputCycleArgument;
-    if (cycleFlag) outputCycleArgument = "--outputModelStateAtCycle";
-    else outputCycleArgument = "--outputModelStateAtTime";
-    arguments << "--config" << outputXML
-              << outputCycleArgument << std::string::number(outputCycle, 'g', 17)
-              << "--modelState" << modelStateFileName;
-    QProcess gaitsym;
-    gaitsym.start(gaitSymExecutable, arguments);
-    if (!gaitsym.waitForStarted())
+    if (!std::filesystem::exists(modelStateFileName) && !std::filesystem::is_regular_file(modelStateFileName))
     {
-        tryToStopGA();
-        m_mergeXMLTimer->stop();
-        m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("runGaitSym: Unable to start \"%1\"").arg(gaitSymExecutable));
-        QMessageBox::warning(this, tr("Run GaitSym Error"), std::string("runGaitSym: Unable to start \"%1\"").arg(gaitSymExecutable));
-        return;
-    }
-    int msecs = 60 * 60 * 1000;
-    if (!gaitsym.waitForFinished(msecs)) // this should work although if gaitsym finished really quickly it is not guaranteed
-    {
-        tryToStopGA();
-        m_mergeXMLTimer->stop();
-        m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("runGaitSym: Timeout \"%1\"").arg(gaitSymExecutable));
-        QMessageBox::warning(this, tr("Run GaitSym Error"), std::string("runGaitSym: Timeout \"%1\"").arg(gaitSymExecutable));
-        return;
-    }
-    QByteArray stdOut = gaitsym.readAllStandardOutput();
-    if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string::fromStdString(stdOut.toStdString()));
-    QByteArray stdError = gaitsym.readAllStandardError();
-    if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string::fromStdString(stdError.toStdString()));
-    QFileInfo modelStateInfo(modelStateFileName);
-    if (!modelStateInfo.exists() && !modelStateInfo.isFile())
-    {
-        tryToStopGA();
-        m_mergeXMLTimer->stop();
-        m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("runGaitSym: Unable to create:\n%1").arg(modelStateFileName));
-        QMessageBox::warning(this, tr("Run GaitSym Error"), std::string("runGaitSym: Unable to create:\n%1").arg(modelStateFileName));
-        return;
+        std::cerr << "Error :runGaitSym: Unable to create: \"" << modelStateFileName << "\"\n";
+        exit(1);
     }
 }
 
@@ -1370,16 +1332,85 @@ std::string Wrapper::shellEscape(const std::string& arg)
     return out;
 }
 
-int Wrapper::runCommand(const std::string& program, const std::vector<std::string>& args)
+std::string Wrapper::runCommand(const std::string& program, const std::vector<std::string>& args, int *exitStatus)
 {
+    std::string result;
     std::ostringstream cmd;
     cmd << shellEscape(program);
 
     for (auto& a : args)
     {
-        cmd << " " << shell_escape(a);
+        cmd << " " << shellEscape(a);
+    }
+    cmd << " 2>&1";  // redirect stderr to stdout
+
+#if defined(_WIN32)
+    FILE* pipe = _popen(cmd.str().c_str(), "r");
+#else
+    FILE* pipe = popen(cmd.str().c_str(), "r");
+#endif
+
+    if (!pipe)
+    {
+        *exitStatus = -1;
+        return result;
     }
 
-    return std::system(cmd.str().c_str());
+    char buffer[1024];
+    while (fgets(buffer, sizeof(buffer), pipe)) { result += buffer; }
+
+#if defined(_WIN32)
+    *exitStatus = _pclose(pipe);
+#else
+    *exitStatus = pclose(pipe);
+#endif
+    return result;
+}
+
+
+std::vector<std::filesystem::path> Wrapper::listFilesMatching(const std::filesystem::path& folder, const std::regex& pattern)
+{
+    std::vector<std::filesystem::path> results;
+
+    if (!std::filesystem::exists(folder) || !std::filesystem::is_directory(folder)) {
+        return results; // return empty if folder doesn't exist
+    }
+
+    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+        if (!entry.is_regular_file()) {
+            continue;
+        }
+
+        const std::string filename = entry.path().filename().string();
+
+        if (std::regex_match(filename, pattern)) {
+            results.push_back(entry.path());
+        }
+    }
+
+    return results;
+}
+
+bool Wrapper::isExecutableFile(const std::filesystem::path& p)
+{
+    // Must exist and be a regular file
+    if (!std::filesystem::exists(p) || !std::filesystem::is_regular_file(p)) {
+        return false;
+    }
+
+#if defined(_WIN32)
+    // Windows: no executable bit, so we check common executable extensions
+    std::string ext = p.extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    return ext == ".exe" ||
+           ext == ".bat" ||
+           ext == ".cmd" ||
+           ext == ".com" ||
+           ext == ".ps1";
+#else
+    // POSIX: check execute permission for the current user
+    return ::access(p.c_str(), X_OK) == 0;
+#endif
 }
 
