@@ -29,7 +29,7 @@ void Wrapper::runGA()
                                        "--baseXMLFile", m_xmlMasterFile,
                                        "--startingPopulation", m_startingPopulationFile,
                                        "--outputDirectory", m_outputFolder,
-                                       "--serverPort", std::to_string(serverPort),
+                                       "--serverPort", std::to_string(m_serverPort),
                                        "--logLevel", std::to_string(m_logLevel)};
     int status;
     std::string output = runCommand(m_gaExecutable, arguments, &status);
@@ -45,8 +45,8 @@ void Wrapper::runMergeXML()
 {
     std::cerr << "Running MergeXML\n";
     // get the population and config from the models
-    m_lastPopulation = std::filesystem::absolute(std::filesystem::path{m_modelPopulationFile}).string();
-    m_lastConfig = std::filesystem::absolute(std::filesystem::path{m_modelConfigurationFile}).string();
+    std::filesystem::path lastPopulation = m_modelPopulationFile;
+    std::filesystem::path lastConfig = m_modelConfigurationFile;
     m_currentLoopValue = m_startValue;
     m_currentLoopCount = 0;
 
@@ -63,8 +63,7 @@ void Wrapper::runMergeXML()
             // get the population and config from the output of the previous runGA
             runGaitSym(); // run gaitsym and generate ModelState.xml
             std::filesystem::path outputFolder(m_outputFolder);
-            std::filesystem::path lastConfig = (outputFolder / "ModelState.xml");
-            m_lastConfig = std::filesystem::absolute(lastConfig).string();
+            lastConfig = (outputFolder / "ModelState.xml");
             if (!std::filesystem::exists(lastConfig))
             {
                 std::cerr << "Error: MergeXML: Unable to find ModelState.xml in: \"" << m_outputFolder << "\"\n";
@@ -77,7 +76,7 @@ void Wrapper::runMergeXML()
                 exit(1);
             }
 
-            m_lastPopulation = files.back().string();
+            lastPopulation = files.back();
             m_currentLoopCount++;
             m_currentLoopValue += m_stepValue;
             if (m_stepValue >= 0 && (m_currentLoopValue > m_endValue || fabs(m_currentLoopValue - m_endValue) < fabs(m_stepValue) * 0.0001)) m_currentLoopValue = m_endValue;
@@ -85,131 +84,99 @@ void Wrapper::runMergeXML()
         }
 
 
-    std::filesystem::path driverFile(m_driverFile);
-    std::filesystem::path workingFolder(m_workingFolder);
-    std::string errorMessage;
-    std::string mergeXMLCommands = readFile(m_mergeXMLFile, &errorMessage);
-    if (!errorMessage.empty())
-    {
-        std::cerr << "Error: MergeXML: Unable to open file:\"" << m_mergeXMLFile
-        exit(1);
-    }
-    QDateTime time = QDateTime::currentDateTime();
-    std::string subFolder(std::string("%1_Run_%2").arg(m_currentLoopCount, 4, 10, QChar('0')).arg(time.toString("yyyy-MM-dd_HH.mm.ss")));
-    std::string outputFolder = QDir(workingFolder.absoluteFilePath()).filePath(subFolder);
-    ui->lineEditOutputFolder->setText(outputFolder);
-    QDir().mkpath(outputFolder);
-    if (QFileInfo(outputFolder).isDir() == false)
-    {
-        m_mergeXMLTimer->stop();
-        m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("MergeXML: Unable to create folder:\n%1").arg(outputFolder));
-        QMessageBox::warning(this, tr("Create Folder Error"), std::string("MergeXML: Unable to create folder:\n%1").arg(outputFolder));
-        activateButtons();
-        return;
-    }
-    std::string workingConfig = QDir(outputFolder).filePath("workingConfig.xml");
-    ui->lineEditXMLMasterFile->setText(workingConfig);
-    QFileInfo firstConfigFile(ui->lineEditModelConfigurationFile->text());
-    std::string replace1 = mergeXMLCommands.replace("MODEL_CONFIG_FILE", lastConfig);
-    std::string replace2 = replace1.replace("DRIVER_CONFIG_FILE", driverFile.absoluteFilePath());
-    std::string replace3 = replace2.replace("WORKING_CONFIG_FILE", workingConfig);
-    std::string replace4 = replace3.replace("CURRENT_LOOP_VALUE", std::string::number(m_currentLoopValue, 'g', 17));
-    std::string replace5 = replace4.replace("FIRST_CONFIG_FILE", firstConfigFile.absoluteFilePath());
-    MergeXML mergeXML;
-    mergeXML.ExecuteInstructionFile(replace5.toUtf8().constData());
-    if (mergeXML.errorMessageList().size())
-    {
-        m_mergeXMLTimer->stop();
-        m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0)
+        std::filesystem::path driverFile(m_driverFile);
+        std::filesystem::path workingFolder(m_workingFolder);
+        std::string errorMessage;
+        std::string mergeXMLCommands = readFile(m_mergeXMLFile, &errorMessage);
+        if (!errorMessage.empty())
         {
-            appendProgress(std::string("MergeXML: Unable to parse file:\n%1").arg(ui->lineEditMergeXMLFile->text()));
-            for (auto &&it : mergeXML.errorMessageList())
-            {
-                appendProgress(std::string("Line %1: %2\n").arg(it.first).arg(std::string::fromStdString(it.second)));
-                if (ui->spinBoxLogLevel->value() > 1)
-                {
-                    auto tokensIt = mergeXML.errorList().find(it.first);
-                    if (tokensIt != mergeXML.errorList().end())
-                    {
-                        std::string tokens = pystring::join(" "s, tokensIt->second);
-                        appendProgress(std::string("%1").arg(std::string::fromStdString(tokens)));
-                    }
-                }
-            }
+            std::cerr << "Error: MergeXML: Unable to open file:\"" << m_mergeXMLFile << "\"\n";
+            std::exit(1);
         }
-        QMessageBox::warning(this, tr("Create Folder Error"), std::string("MergeXML: Unable to parse file:\n%1").arg(ui->lineEditMergeXMLFile->text()));
-        activateButtons();
-        return;
+#if ( __GNUC__ >= 14 ) || ( _MSC_VER >= 1929 ) // these versions required for std::format and std::chrono::current_zone support for C++20
+        auto currentTime = std::chrono::system_clock::now();
+        auto localSecondsTime = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::current_zone()->to_local(currentTime)); //needs to be cast to seconds otherwise %S has decimal digits
+        std::string timeString = std::format("{:%Y-%m-%d_%H.%M.%S}", localSecondsTime);
+#else
+        time_t now = time(nullptr);
+        struct tm local;
+#ifdef _MSC_VER
+        localtime_s(&now, &local);
+#else
+        localtime_r(&now, &local);
+#endif
+        std::string timeString = toString("%04d-%02d-%02d_%02d.%02d.%02d", local.tm_year + 1900, local.tm_mon + 1, local.tm_mday, local.tm_hour, local.tm_min, local.tm_sec);
+#endif
+
+        std::filesystem::path subFolder(toString("%04d_Run_%s", timeString.c_str()));
+        std::filesystem::path outputFolder = workingFolder / subFolder;
+        m_outputFolder = outputFolder.string();
+        std::filesystem::create_directories(outputFolder);
+        if (!std::filesystem::is_directory(outputFolder))
+        {
+            std::cerr << "Error: MergeXML: Unable to create folder: \"" << outputFolder << "\"\n";
+            std::exit(1);
+        }
+        std::filesystem::path workingConfig = (outputFolder / "workingConfig.xml");
+        m_xmlMasterFile = workingConfig.string();
+        std::filesystem::path firstConfigFile = m_modelConfigurationFile;
+        std::string replace = pystring::replace(mergeXMLCommands, "MODEL_CONFIG_FILE", lastConfig.string());
+        replace = pystring::replace(replace, "DRIVER_CONFIG_FILE", driverFile.string());
+        replace = pystring::replace(replace, "WORKING_CONFIG_FILE", workingConfig.string());
+        replace = pystring::replace(replace, "CURRENT_LOOP_VALUE", toString("%.*gs", 17, m_currentLoopValue));
+        replace = pystring::replace(replace, "FIRST_CONFIG_FILE", firstConfigFile.string());
+        MergeXML mergeXML;
+        mergeXML.ExecuteInstructionFile(replace);
+        if (mergeXML.errorMessageList().size())
+        {
+            std::cerr << "Error: MergeXML: Unable to parse file: \"" << m_mergeXMLFile << "\"\n";
+            std::exit(1);
+        }
+        std::filesystem::path newMergeXML = outputFolder / "workingMergeXML.txt";
+        std::ofstream file(newMergeXML, std::ios::out | std::ios::binary);
+        if (!file.is_open())
+        {
+            std::cerr << "Error: MergeXML: Open File Error: \"" << newMergeXML << "\" " << std::error_code(errno, std::system_category()).message() << "\n";
+            std::exit(1);
+        }
+        file.write(replace.c_str(), replace.size());
+        file.close();
+        std::filesystem::path mergeXMLStatusFile = outputFolder / "mergeXMLStatus.txt";
+        std::ofstream stream(mergeXMLStatusFile, std::ios::out | std::ios::binary);
+        if (!stream.is_open())
+        {
+            std::cerr << "Error: MergeXML: Open File Error: \"" << mergeXMLStatusFile << "\" " << std::error_code(errno, std::system_category()).message() << "\n";
+            std::exit(1);
+        }
+        stream << "startValue " << m_startValue << "\n";
+        stream << "stepValue " << m_stepValue << "\n";
+        stream << "endValue " << m_endValue << "\n";
+        stream << "currentLoopCount " << m_currentLoopCount << "\n";
+        if (m_cycleFlag) stream << "outputCycle " << m_outputCycle << "\n";
+        else stream << "outputTime " << m_outputCycle << "\n";
+        stream << "CURRENT_LOOP_VALUE " << m_currentLoopValue << "\n";
+        stream << "MODEL_CONFIG_FILE " << lastConfig << "\n";
+        stream << "DRIVER_CONFIG_FILE " << driverFile << "\n";
+        stream << "WORKING_CONFIG_FILE " << workingConfig << "\n";
+        stream << "FIRST_CONFIG_FILE " << firstConfigFile << "\n";
+        stream.close();
+        std::filesystem::path newPopulation = outputFolder / "workingPopulation.txt";
+        std::filesystem::copy_file(lastPopulation, newPopulation);
+        m_startingPopulationFile = newPopulation.string();
+        runPostMergeScript();
+        runGA();
     }
-    std::string newMergeXML = QDir(outputFolder).filePath("workingMergeXML.txt");
-    QFile file(newMergeXML);
-    if (!file.open(QFile::WriteOnly))
-    {
-        QMessageBox::warning(this, std::string("Open File Error %1").arg(newMergeXML), file.errorString());
-        activateButtons();
-        return;
-    }
-    file.write(replace5.toUtf8());
-    file.close();
-    std::string mergeXMLStatusFile = QDir(outputFolder).filePath("mergeXMLStatus.txt");
-    QFile file2(mergeXMLStatusFile);
-    if (!file2.open(QFile::WriteOnly))
-    {
-        QMessageBox::warning(this, std::string("Open File Error %1").arg(newMergeXML), file.errorString());
-        activateButtons();
-        return;
-    }
-    QTextStream stream(&file2);
-    double outputCycle = ui->doubleSpinBoxOutputCycle->value();
-    bool cycle = ui->checkBoxCycleTime->isChecked();
-    stream << "startValue " << startValue << "\n";
-    stream << "stepValue " << stepValue << "\n";
-    stream << "endValue " << endValue << "\n";
-    stream << "currentLoopCount " << m_currentLoopCount << "\n";
-    if (cycle) stream << "outputCycle " << outputCycle << "\n";
-    if (cycle) stream << "outputTime " << outputCycle << "\n";
-    stream << "CURRENT_LOOP_VALUE " << m_currentLoopValue << "\n";
-    stream << "MODEL_CONFIG_FILE " << lastConfig << "\n";
-    stream << "DRIVER_CONFIG_FILE " << driverFile.absoluteFilePath() << "\n";
-    stream << "WORKING_CONFIG_FILE " << workingConfig << "\n";
-    stream << "FIRST_CONFIG_FILE " << firstConfigFile.absoluteFilePath() << "\n";
-    file2.close();
-    ui->lineEditXMLMasterFile->setText(workingConfig);
-    std::string newPopulation = QDir(outputFolder).filePath("workingPopulation.txt");
-    QFile::copy(lastPopulation, newPopulation);
-    ui->lineEditStartingPopulationFile->setText(newPopulation);
-    runPostMergeScript();
-    runGA();
 }
 
 void Wrapper::runPostMergeScript()
 {
-    std::string mergeScriptExecutable = ui->lineEditPostMergeScript->text();
-    if (mergeScriptExecutable.isEmpty()) return;
+    if (m_postMergeScript.empty()) return;
+    std::filesystem::path mergeScriptExecutable = m_postMergeScript;
 
-    if (ui->spinBoxLogLevel->value() > 0) appendProgress("Running Post Merge Script");
-    ui->statusBar->showMessage("Running Post Merge Script");
-
-    QFileInfo mergeScriptExecutableInfo(mergeScriptExecutable);
-    bool mergeScriptExecutableValid = false;
-    if (mergeScriptExecutableInfo.exists() && mergeScriptExecutableInfo.isFile()) mergeScriptExecutableValid = true;
-    if (!mergeScriptExecutableValid)
-    {
-        tryToStopGA();
-        m_mergeXMLTimer->stop();
-        m_runMergeXML = 0;
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(std::string("runPostMergeScript: Unable to find \"%1\"").arg(mergeScriptExecutable));
-        QMessageBox::warning(this, tr("Run Post Merge Script Error"), std::string("runPostMergeScript: Unable to find \"%1\"").arg(mergeScriptExecutable));
-        return;
-    }
-    std::stringList arguments;
-    QProcess mergeScript;
     std::string interpreter;
-    if (mergeScriptExecutableInfo.isExecutable())
+    if (isExecutableFile(mergeScriptExecutable))
     {
-        arguments << "--startingPopulationFile" << ui->lineEditStartingPopulationFile->text()
+        std::vector<std::string> arguments << "--startingPopulationFile" << ui->lineEditStartingPopulationFile->text()
                   << "--xmlMasterFile" << ui->lineEditXMLMasterFile->text()
                   << "--outputFolder" << ui->lineEditOutputFolder->text()
                   << "--currentLoopValue" << std::string::number(m_currentLoopValue, 'g', 17)
@@ -313,9 +280,7 @@ void Wrapper::runGaitSym()
     arguments.push_back(outputXML.string());
     if (m_cycleFlag) arguments.push_back("--outputModelStateAtCycle");
     else arguments.push_back("--outputModelStateAtTime");
-    char buffer[64]; int precision = 17;
-    std::snprintf(buffer, sizeof(buffer), "%.*g", precision, m_outputCycle); // %g conversion needs to use the C functions
-    arguments.push_back(buffer);
+    arguments.push_back(toString("%.*g", 17, m_outputCycle)); // this lets you set the precision as an argument
     arguments.push_back("--modelState");
     arguments.push_back(modelStateFileName.string());
     int exitStatus;
@@ -1401,5 +1366,27 @@ std::string Wrapper::readFile(const std::string &path, std::string *errorMessage
     return result;
 }
 
+// convert to string using printf style formatting and variable numbers of arguments
+std::string Wrapper::toString(const char * const printfFormatString, ...)
+{
+    // initialize use of the variable argument array
+    va_list vaArgs;
+    va_start(vaArgs, printfFormatString);
+
+    // reliably acquire the size
+    // from a copy of the variable argument array
+    // and a functionally reliable call to mock the formatting
+    va_list vaArgsCopy;
+    va_copy(vaArgsCopy, vaArgs);
+    const int iLen = std::vsnprintf(nullptr, 0, printfFormatString, vaArgsCopy);
+    va_end(vaArgsCopy);
+
+    // return a formatted string without risking memory mismanagement
+    // and without assuming any compiler or platform specific behavior
+    std::unique_ptr<char[]> zc = std::make_unique<char[]>(iLen + 1);
+    std::vsnprintf(zc.get(), size_t(iLen + 1), printfFormatString, vaArgs);
+    va_end(vaArgs);
+    return std::string(zc.get(), size_t(iLen));
+}
 
 

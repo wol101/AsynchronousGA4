@@ -35,40 +35,39 @@ public:
     static std::vector<std::filesystem::path> listFilesMatching(const std::filesystem::path& folder, const std::regex& pattern);
     static bool isExecutableFile(const std::filesystem::path& p);
     static std::string readFile(const std::string &path, std::string *errorMessage);
+    static std::string toString(const char * const printfFormatString, ...);
 
 
 private:
 
+    std::string m_parameterFile;
+    std::string m_startingPopulationFile;
+    std::string m_xmlMasterFile;
+    std::string m_outputFolder;
+
+    std::string m_gaExecutable;
+    std::string m_gaitSymExecutable;
+
+    std::string m_modelConfigurationFile;
+    std::string m_modelPopulationFile;
+    std::string m_driverFile;
+    std::string m_mergeXMLFile;
+    std::string m_workingFolder;
+    std::string m_postMergeScript;
+
     double m_startValue =0;
     double m_stepValue = 1;
     double m_endValue = 10;
-    std::string m_modelPopulationFile;
-    std::string m_modelConfigurationFile;
     double m_outputCycle = 0;
     bool m_cycleFlag = false;
+
+    int m_logLevel = 1;
+    int m_serverPort = 8086;
 
     double m_currentLoopValue = 0;
     int m_currentLoopCount = 0;
     std::chrono::time_point<std::chrono::steady_clock> m_lastResultsTime;
     int m_lastResultsNumber = -1;
-    std::string m_lastPopulation;
-    std::string m_lastConfig;
-
-    std::string m_asynchronousGAFileName;
-
-    std::string m_outputFolder;
-    std::string m_parameterFile;
-    std::string m_xmlMasterFile;
-    std::string m_startingPopulationFile;
-    int m_logLevel = 1;
-    int serverPort = 8086;
-
-    std::string m_driverFile;
-    std::string m_workingFolder;
-    std::string m_mergeXMLFile;
-
-    std::string m_gaExecutable;
-    std::string m_gaitSymExecutable;
 
     std::string m_startExpressionMarker = {"[["};
     std::string m_endExpressionMarker = {"]]"};

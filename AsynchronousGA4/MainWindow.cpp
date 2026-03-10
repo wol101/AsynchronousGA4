@@ -501,7 +501,7 @@ void MainWindow::runMergeXML()
     stream << "endValue " << endValue << "\n";
     stream << "currentLoopCount " << m_currentLoopCount << "\n";
     if (cycle) stream << "outputCycle " << outputCycle << "\n";
-    if (cycle) stream << "outputTime " << outputCycle << "\n";
+    else stream << "outputTime " << outputCycle << "\n";
     stream << "CURRENT_LOOP_VALUE " << m_currentLoopValue << "\n";
     stream << "MODEL_CONFIG_FILE " << lastConfig << "\n";
     stream << "DRIVER_CONFIG_FILE " << driverFile.absoluteFilePath() << "\n";
