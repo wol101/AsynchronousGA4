@@ -19,6 +19,9 @@ add_link_options(-static-libgcc -static-libstdc++)
 set(CMAKE_EXE_LINK_DYNAMIC_C_FLAGS "")   # remove -rdynamic
 set(CMAKE_EXE_LINK_DYNAMIC_CXX_FLAGS "")
 
+# generates detailed compile_commands.json file
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 add_executable(AsynchronousGA4CL
     ../src/ArgParse.cpp
     ../src/DataFile.cpp
