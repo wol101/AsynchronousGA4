@@ -17,12 +17,13 @@ public:
 
     static std::string shellEscape(const std::string& arg);
     static std::string runCommand(const std::string& program, const std::vector<std::string>& args, int *exitStatus);
-    static std::vector<std::filesystem::path> listFilesMatching(const std::filesystem::path& folder, const std::regex& pattern);
-    static bool isExecutableFile(const std::filesystem::path& p);
-    static std::string readFile(const std::string &path, std::string *errorMessage);
+    static std::vector<std::filesystem::path> listFilesMatching(const std::filesystem::path& folderPath, const std::regex& pattern);
+    static bool isExecutableFile(const std::filesystem::path& filePath);
+    static std::string readFileToString(const std::string &pathString, std::string *errorMessage);
     static std::string toString(const char * const printfFormatString, ...);
-    static std::filesystem::path existsOnPath(const std::string& filename);
+    static std::filesystem::path existsOnPath(const std::filesystem::path &filename);
     static bool toBool(const std::string& s, bool *valid = 0);
+    static std::string toAbsolutePath(const std::string &pathString);
 
 
     void setLogLevel(int newLogLevel);

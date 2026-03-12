@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <cstdio>
 #include <iostream>
+#include <cstring>
 
 #if defined(_WIN32)
 #include <algorithm>
@@ -95,7 +96,7 @@ void Wrapper::runMergeXML()
         std::filesystem::path driverFile(m_driverFile);
         std::filesystem::path workingFolder(m_workingFolder);
         std::string errorMessage;
-        std::string mergeXMLCommands = readFile(m_mergeXMLFile, &errorMessage);
+        std::string mergeXMLCommands = readFileToString(m_mergeXMLFile, &errorMessage);
         if (!errorMessage.empty())
         {
             std::cerr << "Error: MergeXML: Unable to open file:\"" << m_mergeXMLFile << "\"\n";
@@ -303,18 +304,18 @@ void Wrapper::openSettingsFile(const std::string &fileName)
     }
 
     char *attributePtr, *endPtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "outputFolder"); if (attributePtr) m_outputFolder = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "parameterFile"); if (attributePtr) m_parameterFile = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "xmlMasterFile"); if (attributePtr) m_xmlMasterFile = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "startingPopulationFile"); if (attributePtr) m_startingPopulationFile = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "modelConfigurationFile"); if (attributePtr) m_modelConfigurationFile = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "modelPopulationFile"); if (attributePtr) m_modelPopulationFile = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "driverFile"); if (attributePtr) m_driverFile = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "workingFolder"); if (attributePtr) m_workingFolder = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "mergeXMLFile"); if (attributePtr) m_mergeXMLFile = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "gaitSymExecutable"); if (attributePtr) m_gaitSymExecutable = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "postMergeScript"); if (attributePtr) m_postMergeScript = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "gaExecutable"); if (attributePtr) m_gaExecutable = attributePtr;
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "outputFolder"); if (attributePtr) m_outputFolder = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "parameterFile"); if (attributePtr) m_parameterFile = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "xmlMasterFile"); if (attributePtr) m_xmlMasterFile = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "startingPopulationFile"); if (attributePtr) m_startingPopulationFile = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "modelConfigurationFile"); if (attributePtr) m_modelConfigurationFile = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "modelPopulationFile"); if (attributePtr) m_modelPopulationFile = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "driverFile"); if (attributePtr) m_driverFile = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "workingFolder"); if (attributePtr) m_workingFolder = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "mergeXMLFile"); if (attributePtr) m_mergeXMLFile = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "gaitSymExecutable"); if (attributePtr) m_gaitSymExecutable = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "gaExecutable"); if (attributePtr) m_gaExecutable = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "postMergeScript"); if (attributePtr && std::strlen(attributePtr)) m_postMergeScript = toAbsolutePath(attributePtr);
     attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "logLevel"); if (attributePtr) m_logLevel = std::strtol(attributePtr, &endPtr, 10);
     attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "portNumber"); if (attributePtr) m_portNumber = std::strtol(attributePtr, &endPtr, 10);
     attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "startValue"); if (attributePtr) m_startValue = std::strtof(attributePtr, &endPtr);;
@@ -331,7 +332,7 @@ void Wrapper::openSettingsFile(const std::string &fileName)
 
 
 // Returns the full path if found, or an empty path if not found.
-std::filesystem::path Wrapper::existsOnPath(const std::string& filename)
+std::filesystem::path Wrapper::existsOnPath(const std::filesystem::path& filename)
 {
 #ifdef _WIN32
     static const char PATH_SEPARATOR = ';';
@@ -450,15 +451,15 @@ std::string Wrapper::runCommand(const std::string& program, const std::vector<st
 }
 
 
-std::vector<std::filesystem::path> Wrapper::listFilesMatching(const std::filesystem::path& folder, const std::regex& pattern)
+std::vector<std::filesystem::path> Wrapper::listFilesMatching(const std::filesystem::path& folderPath, const std::regex& pattern)
 {
     std::vector<std::filesystem::path> results;
 
-    if (!std::filesystem::exists(folder) || !std::filesystem::is_directory(folder)) {
+    if (!std::filesystem::exists(folderPath) || !std::filesystem::is_directory(folderPath)) {
         return results; // return empty if folder doesn't exist
     }
 
-    for (const auto& entry : std::filesystem::directory_iterator(folder)) {
+    for (const auto& entry : std::filesystem::directory_iterator(folderPath)) {
         if (!entry.is_regular_file()) {
             continue;
         }
@@ -473,16 +474,16 @@ std::vector<std::filesystem::path> Wrapper::listFilesMatching(const std::filesys
     return results;
 }
 
-bool Wrapper::isExecutableFile(const std::filesystem::path& p)
+bool Wrapper::isExecutableFile(const std::filesystem::path& filePath)
 {
     // Must exist and be a regular file
-    if (!std::filesystem::exists(p) || !std::filesystem::is_regular_file(p)) {
+    if (!std::filesystem::exists(filePath) || !std::filesystem::is_regular_file(filePath)) {
         return false;
     }
 
 #if defined(_WIN32)
     // Windows: no executable bit, so we check common executable extensions
-    std::string ext = p.extension().string();
+    std::string ext = filePath.extension().string();
     std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
     return ext == ".exe" ||
@@ -492,15 +493,14 @@ bool Wrapper::isExecutableFile(const std::filesystem::path& p)
            ext == ".ps1";
 #else
     // POSIX: check execute permission for the current user
-    return ::access(p.c_str(), X_OK) == 0;
+    return ::access(filePath.c_str(), X_OK) == 0;
 #endif
 }
 
-std::string Wrapper::readFile(const std::string &path, std::string *errorMessage)
+std::string Wrapper::readFileToString(const std::string &pathString, std::string *errorMessage)
 {
     std::string result;
-    // Open the stream to 'lock' the file.
-    std::ifstream file(path, std::ios::in | std::ios::binary);
+    std::ifstream file(pathString, std::ios::in | std::ios::binary);
     if (!file.is_open())
     {
         if (errorMessage)
@@ -522,7 +522,7 @@ std::string Wrapper::readFile(const std::string &path, std::string *errorMessage
 
     if (file.bad())
     {
-        if (errorMessage) { *errorMessage = "I/O error while reading file: " + path; }
+        if (errorMessage) { *errorMessage = "I/O error while reading file: " + pathString; }
         return result;
     }
 
@@ -571,6 +571,14 @@ bool Wrapper::toBool(const std::string& s, bool *valid)
 
      if (valid) *valid = true;
     return false;
+}
+
+std::string Wrapper::toAbsolutePath(const std::string &pathString)
+{
+    std::string absolutePathString;
+    std::filesystem::path varname(pathString);
+    absolutePathString = std::filesystem::absolute(pathString).string();
+    return absolutePathString;
 }
 
 void Wrapper::setLogLevel(int newLogLevel)

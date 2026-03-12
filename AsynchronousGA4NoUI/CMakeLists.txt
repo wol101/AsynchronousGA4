@@ -10,12 +10,12 @@ project(AsynchronousGA4NoUI VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 # try to maximise portability
 set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -march=x86-64 -mtune=generic")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64 -mtune=generic")
 set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
 add_link_options(-no-pie)
-
 # options for static build
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
@@ -23,6 +23,14 @@ set(CMAKE_EXE_LINKER_FLAGS "-static")
 add_link_options(-static-libgcc -static-libstdc++)
 set(CMAKE_EXE_LINK_DYNAMIC_C_FLAGS "")   # remove -rdynamic
 set(CMAKE_EXE_LINK_DYNAMIC_CXX_FLAGS "")
+endif()
+
+if (MSVC)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+add_compile_definitions(_CRT_SECURE_NO_WARNINGS _WINSOCK_DEPRECATED_NO_WARNINGS _WIN32_WINNT=_WIN32_WINNT_WIN7)
+endif ()
+
 
 # generates detailed compile_commands.json file
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -58,11 +66,6 @@ target_include_directories(AsynchronousGA4NoUI PRIVATE
     ../pystring
     ../rapidxml-1.13
 )
-
-if (MSVC)
-    target_compile_options(AsynchronousGA4NoUI PRIVATE /bigobj /MT) # /MT allows multithreading
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS _WINSOCK_DEPRECATED_NO_WARNINGS _WIN32_WINNT=_WIN32_WINNT_WIN7)
-endif ()
 
 # options for static build
 set_target_properties(AsynchronousGA4NoUI PROPERTIES LINK_SEARCH_START_STATIC TRUE)
