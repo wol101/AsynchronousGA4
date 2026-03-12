@@ -11,7 +11,9 @@ class Wrapper
 {
 
 public:
-    explicit Wrapper();
+    explicit Wrapper(const std::string &settingsFile);
+
+    void run();
 
     static std::string shellEscape(const std::string& arg);
     static std::string runCommand(const std::string& program, const std::vector<std::string>& args, int *exitStatus);
@@ -22,6 +24,8 @@ public:
     static std::filesystem::path existsOnPath(const std::string& filename);
     static bool toBool(const std::string& s, bool *valid = 0);
 
+
+    void setLogLevel(int newLogLevel);
 
 private:
 
@@ -61,7 +65,7 @@ private:
     void runPostMergeScript();
     void runGA();
     void runGaitSym();
-    void openFile(const std::string &fileName);
+    void openSettingsFile(const std::string &fileName);
     void runMergeXML();
 
 

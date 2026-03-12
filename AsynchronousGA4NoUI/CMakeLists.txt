@@ -16,6 +16,7 @@ add_executable(AsynchronousGA4NoUI
     ../AsynchronousGA4/XMLContainer.cpp
     ../AsynchronousGA4/XMLContainerList.cpp
     ../AsynchronousGA4/XMLConverter.cpp
+    ../src/ArgParse.cpp
     main.cpp
     Wrapper.cpp
 
@@ -24,6 +25,7 @@ add_executable(AsynchronousGA4NoUI
     ../AsynchronousGA4/XMLContainer.h
     ../AsynchronousGA4/XMLContainerList.h
     ../AsynchronousGA4/XMLConverter.h
+    ../src/ArgParse.h
     Wrapper.h
 
     ../pocketpy/pocketpy.h
@@ -35,6 +37,7 @@ add_executable(AsynchronousGA4NoUI
 target_include_directories(AsynchronousGA4NoUI PRIVATE
     .
     ../AsynchronousGA4
+    ../src
     ../pocketpy
     ../pystring
     ../rapidxml-1.13

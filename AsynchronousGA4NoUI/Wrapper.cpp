@@ -20,8 +20,15 @@
 
 using namespace std::string_literals;
 
-Wrapper::Wrapper()
+Wrapper::Wrapper(const std::string &settingsFile)
 {
+    openSettingsFile(settingsFile);
+}
+
+void Wrapper::run()
+{
+    if (m_mergeXMLActivate) runMergeXML();
+    else runGA();
 }
 
 void Wrapper::runGA()
@@ -286,7 +293,7 @@ void Wrapper::runGaitSym()
     }
 }
 
-void Wrapper::openFile(const std::string &fileName)
+void Wrapper::openSettingsFile(const std::string &fileName)
 {
     XMLContainer xmlContainer;
     if (xmlContainer.LoadXML(fileName))
@@ -564,6 +571,11 @@ bool Wrapper::toBool(const std::string& s, bool *valid)
 
      if (valid) *valid = true;
     return false;
+}
+
+void Wrapper::setLogLevel(int newLogLevel)
+{
+    m_logLevel = newLogLevel;
 }
 
 
