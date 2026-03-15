@@ -117,7 +117,7 @@ void Wrapper::runMergeXML()
         std::string timeString = toString("%04d-%02d-%02d_%02d.%02d.%02d", local.tm_year + 1900, local.tm_mon + 1, local.tm_mday, local.tm_hour, local.tm_min, local.tm_sec);
 #endif
 
-        std::filesystem::path subFolder(toString("%04d_Run_%s", timeString.c_str()));
+        std::filesystem::path subFolder(toString("%04d_Run_%s", m_currentLoopCount, timeString.c_str()));
         std::filesystem::path outputFolder = workingFolder / subFolder;
         m_outputFolder = outputFolder.string();
         std::filesystem::create_directories(outputFolder);
@@ -186,7 +186,7 @@ void Wrapper::runPostMergeScript()
         std::vector<std::string> arguments{"--startingPopulationFile", m_startingPopulationFile,
                 "--xmlMasterFile", m_xmlMasterFile,
                 "--outputFolder", m_outputFolder,
-                "--currentLoopValue", toString("&.*g", 17, m_currentLoopValue),
+                "--currentLoopValue", toString("%.*g", 17, m_currentLoopValue),
                 "--logLevel", std::to_string(m_logLevel)};
         int returnCode;
         std::string output = runCommand(m_postMergeScript, arguments, &returnCode);
@@ -228,7 +228,7 @@ void Wrapper::runPostMergeScript()
                                            "--startingPopulationFile", m_startingPopulationFile,
                                            "--xmlMasterFile", m_xmlMasterFile,
                                            "--outputFolder", m_outputFolder,
-                                           "--currentLoopValue", toString("&.*g", 17, m_currentLoopValue),
+                                           "--currentLoopValue", toString("%.*g", 17, m_currentLoopValue),
                                            "--logLevel", std::to_string(m_logLevel)};
         int returnCode;
         std::string output = runCommand(interpreter.string(), arguments, &returnCode);
