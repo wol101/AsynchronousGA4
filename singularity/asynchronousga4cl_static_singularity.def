@@ -1,19 +1,24 @@
 # to build the container make sure the static binary is up to date and in the correct folder
 # build with (note that singularity containers cannot be built in WSL):
 # sudo singularity build asynchronousga4cl_container.sif asynchronousga4cl_static_singularity.def
-# run with:
-# singularity run asynchronousga4cl_container.sif command_line_options 
+# run the runscript with:
+# singularity run asynchronousga4cl_container.sif command_line_options
+# or run an individual command with
+# singularity exec asynchronousga4cl_container.sif AsynchronousGA4CL command_line_options
+# singularity exec asynchronousga4cl_container.sif AsynchronousGA4NoUI command_line_options
 
 Bootstrap: docker
 From: ubuntu:24.04
 
 # copy the binary from the build folder
 %files
-    ../build/AsynchronousGA4CL /usr/local/bin/AsynchronousGA4CL
+    ../terminal/Release/bin/AsynchronousGA4CL /usr/local/bin/AsynchronousGA4CL
+    ../AsynchronousGA4NoUI/Release/bin/AsynchronousGA4NoUI /usr/local/bin/AsynchronousGA4NoUI
 
 # make it executable
 %post
     chmod +x /usr/local/bin/AsynchronousGA4CL
+    chmod +x /usr/local/bin/AsynchronousGA4NoUI
 
 # allow command line arguments to be passed when run
 %runscript

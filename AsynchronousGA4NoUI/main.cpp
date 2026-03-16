@@ -16,7 +16,7 @@ int main(int argc, const char **argv)
     // required arguments
     argparse.AddArgument("-s"s, "--settingsFile"s, "Settings XML file specifying the run"s, ""s, 1, true, ArgParse::String);
     // optional arguments
-    argparse.AddArgument("-l"s, "--logLevel"s, "0, 1, 2 outputs more detail with higher numbers [0]"s, ""s, 1, false, ArgParse::Int);
+    argparse.AddArgument("-l"s, "--logLevel"s, "Override logLevel if set: 0, 1, 2 outputs more detail with higher numbers"s, ""s, 1, false, ArgParse::Int);
 
     int err = argparse.Parse();
     if (err)
