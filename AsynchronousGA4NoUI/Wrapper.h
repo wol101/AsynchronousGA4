@@ -11,8 +11,9 @@ class Wrapper
 {
 
 public:
-    explicit Wrapper(const std::string &settingsFile);
+    explicit Wrapper();
 
+    void openSettingsFile(const std::string &fileName);
     void run();
 
     static std::string shellEscape(const std::string& arg);
@@ -53,6 +54,7 @@ private:
     bool m_cycle = false;
 
     int m_logLevel = 1;
+    bool m_overrideLogLevel = false;
     int m_portNumber = 8086;
 
     double m_currentLoopValue = 0;
@@ -66,7 +68,6 @@ private:
     void runPostMergeScript();
     void runGA();
     void runGaitSym();
-    void openSettingsFile(const std::string &fileName);
     void runMergeXML();
 
 

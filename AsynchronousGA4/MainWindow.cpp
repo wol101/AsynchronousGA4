@@ -1557,8 +1557,10 @@ void MainWindow::menuRequestPath(QPoint pos)
                     QMessageBox::warning(this, tr("Open File Error"), QString("menuRequestPath: Unable to open file (write):\n%1").arg(fileName));
                     return;
                 }
-                editFileData = gaParametersDialog.editorText().toUtf8();
-                editFile.write(editFileData);
+                QString newData = gaParametersDialog.editorText().toUtf8();
+                std::string indented;
+                XMLIndenter::XmlError xmlError = XMLIndenter::reformatXml(newData.toStdString(), indented);
+                editFile.write(indented.c_str(), indented.size());
                 editFile.close();
                 if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("'%1' written").arg(lineEdit->text()));
                 ui->statusBar->showMessage(QString("'%1' written").arg(lineEdit->text()));
