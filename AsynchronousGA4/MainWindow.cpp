@@ -1250,7 +1250,14 @@ void MainWindow::save()
     dataItemsElement.setAttribute("endExpressionMarker", QString::fromStdString(m_endExpressionMarker));
 
     // and now the actual xml doc
-    std::string indented = XMLIndenter::reformatXml(doc.toString(-1).toStdString());
+    std::string indented;
+    XMLIndenter::XmlError xmlError = XMLIndenter::reformatXml(doc.toString(-1).toStdString(), indented);
+    if (xmlError != XMLIndenter::XmlError::Ok)
+    {
+        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("save: indent error:\n%1").arg(XMLIndenter::xmlErrorMessage(xmlError)));
+        QMessageBox::warning(this, tr("Save File Error"), QString("save: indent error:\n%1").arg(XMLIndenter::xmlErrorMessage(xmlError)));
+        return;
+    }
     qint64 bytesWritten = file.write(indented.c_str(), indented.size());
     if (bytesWritten != indented.size())
     {
