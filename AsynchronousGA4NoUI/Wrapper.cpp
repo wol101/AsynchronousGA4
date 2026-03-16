@@ -70,7 +70,7 @@ void Wrapper::runMergeXML()
     {
         if (m_logLevel > 1)
         {
-            std::cerr << "m_currentLoopCount = " << m_currentLoopCount << " m_currentLoopCount = " << m_currentLoopCount << "\n";
+            std::cerr << "m_currentLoopCount = " << m_currentLoopCount << " m_currentLoopValue = " << m_currentLoopValue << "\n";
             std::cerr << "lastPopulation = " << lastPopulation << " lastConfig = " << lastConfig << "\n";
         }
         std::filesystem::path driverFile(m_driverFile);
