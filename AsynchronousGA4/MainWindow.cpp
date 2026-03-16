@@ -6,6 +6,7 @@
 #include "GAParametersDialog.h"
 #include "MergeXML.h"
 #include "XMLConverter.h"
+#include "XMLIndenter.h"
 
 #include "pystring.h"
 
@@ -1249,9 +1250,9 @@ void MainWindow::save()
     dataItemsElement.setAttribute("endExpressionMarker", QString::fromStdString(m_endExpressionMarker));
 
     // and now the actual xml doc
-    QByteArray xmlData = doc.toByteArray();
-    qint64 bytesWritten = file.write(xmlData);
-    if (bytesWritten != xmlData.size())
+    std::string indented = XMLIndenter::reformatXml(doc.toString(-1).toStdString());
+    qint64 bytesWritten = file.write(indented.c_str(), indented.size());
+    if (bytesWritten != indented.size())
     {
         if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("save: Unable to write file (write):\n%1").arg(m_asynchronousGAFileName));
         QMessageBox::warning(this, tr("Save File Error"), QString("save: Unable to write file (write):\n%1").arg(m_asynchronousGAFileName));

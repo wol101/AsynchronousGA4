@@ -26,6 +26,7 @@ set(PROJECT_SOURCES
     XMLContainer.cpp
     XMLContainerList.cpp
     XMLConverter.cpp
+    XMLIndenter.cpp
     main.cpp
 
     BasicXMLSyntaxHighlighter.h
@@ -38,6 +39,7 @@ set(PROJECT_SOURCES
     XMLContainer.h
     XMLContainerList.h
     XMLConverter.h
+    XMLIndenter.h
 
     GAParametersDialog.ui
     MainWindow.ui
