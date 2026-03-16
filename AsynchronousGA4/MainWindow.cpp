@@ -273,7 +273,8 @@ void MainWindow::pushButtonStartClicked()
     if (ui->checkBoxMergeXMLActivate->isChecked())
     {
         m_runMergeXML = 1;
-        m_currentLoopValue = ui->doubleSpinBoxStartValue->value();
+        m_maxLoopCount = static_cast<int>(std::round((ui->doubleSpinBoxEndValue->value() - ui->doubleSpinBoxEndValue->value()) / ui->doubleSpinBoxStepValue->value()));
+        m_currentLoopCount = 0;
         m_mergeXMLTimer->start(1000);
     }
     else
@@ -353,7 +354,7 @@ void MainWindow::runMergeXML()
     double startValue = ui->doubleSpinBoxStartValue->value();
     double stepValue = ui->doubleSpinBoxStepValue->value();
     double endValue = ui->doubleSpinBoxEndValue->value();
-    if ((stepValue >= 0 && m_currentLoopValue >= endValue) || (stepValue < 0 && m_currentLoopValue <= endValue))
+    if (m_currentLoopCount > m_maxLoopCount)
     {
         if (ui->spinBoxLogLevel->value() > 0) appendProgress("MergeXML finished");
         ui->statusBar->showMessage("MergeXML finished");
@@ -375,8 +376,8 @@ void MainWindow::runMergeXML()
         QFileInfo modelPopulationFile(ui->lineEditModelPopulationFile->text());
         lastPopulation = modelPopulationFile.absoluteFilePath();
         lastConfig = modelConfigurationFile.absoluteFilePath();
-        m_currentLoopValue = startValue;
         m_currentLoopCount = 0;
+        m_currentLoopValue = startValue + m_currentLoopCount * stepValue;
     }
     else
     {
@@ -406,9 +407,7 @@ void MainWindow::runMergeXML()
         }
         lastPopulation = dir.filePath(files.last());
         m_currentLoopCount++;
-        m_currentLoopValue += stepValue;
-        if (stepValue >= 0 && (m_currentLoopValue > endValue || fabs(m_currentLoopValue - endValue) < fabs(stepValue) * 0.001)) m_currentLoopValue = endValue;
-        if (stepValue < 0 && (m_currentLoopValue < endValue || fabs(m_currentLoopValue - endValue) < fabs(stepValue) * 0.001)) m_currentLoopValue = endValue;
+        m_currentLoopValue = startValue + m_currentLoopCount * stepValue;
     }
     ui->lineEditCurrentLoopValue->setText(QString::number(m_currentLoopValue, 'f', 3));
     ui->lineEditCurrentLoopCount->setText(QString::number(m_currentLoopCount, 'f', 3));

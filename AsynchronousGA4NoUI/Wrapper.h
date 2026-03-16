@@ -17,7 +17,7 @@ public:
     void run();
 
     static std::string shellEscape(const std::string& arg);
-    static std::string runCommand(const std::string& program, const std::vector<std::string>& args, int *exitStatus);
+    static int runCommand(const std::string& program, const std::vector<std::string>& args, std::string *result = 0);
     static std::vector<std::filesystem::path> listFilesMatching(const std::filesystem::path& folderPath, const std::regex& pattern);
     static bool isExecutableFile(const std::filesystem::path& filePath);
     static std::string readFileToString(const std::string &pathString, std::string *errorMessage);
@@ -47,20 +47,19 @@ private:
     std::string m_postMergeScript;
 
     double m_startValue =0;
-    double m_stepValue = 1;
-    double m_endValue = 10;
+    double m_stepValue = 0;
+    double m_endValue = 0;
     double m_outputCycle = 0;
     bool m_mergeXMLActivate = false;
     bool m_cycle = false;
 
-    int m_logLevel = 1;
+    int m_logLevel = 0;
     bool m_overrideLogLevel = false;
-    int m_portNumber = 8086;
+    int m_portNumber = 0;
 
     double m_currentLoopValue = 0;
     int m_currentLoopCount = 0;
-    std::chrono::time_point<std::chrono::steady_clock> m_lastResultsTime;
-    int m_lastResultsNumber = -1;
+    int m_maxLoopCount = 0;
 
     std::string m_startExpressionMarker = {"[["};
     std::string m_endExpressionMarker = {"]]"};

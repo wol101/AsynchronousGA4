@@ -45,11 +45,9 @@ void Wrapper::runGA()
                                        "--outputDirectory", m_outputFolder,
                                        "--serverPort", std::to_string(m_portNumber),
                                        "--logLevel", std::to_string(m_logLevel)};
-    int status;
     if (m_logLevel > 0) std::cerr << "Running \"" << m_gaExecutable << "\"\n";
     if (m_logLevel > 1) std::cerr << pystring::join(" "s, arguments) << "\n";
-    std::string output = runCommand(m_gaExecutable, arguments, &status);
-    std::cerr << output;
+    int status = runCommand(m_gaExecutable, arguments);
     if (status)
     {
         std::cerr << "Error " << status << " running: " << m_gaExecutable << pystring::join(" "s, arguments) << "\n";
@@ -63,43 +61,18 @@ void Wrapper::runMergeXML()
     // get the population and config from the models
     std::filesystem::path lastPopulation = m_modelPopulationFile;
     std::filesystem::path lastConfig = m_modelConfigurationFile;
+    bool firstLoop = true;
+    m_maxLoopCount = static_cast<int>(std::round((m_endValue - m_startValue) / m_stepValue));
     m_currentLoopValue = m_startValue;
-    m_currentLoopCount = 0;    
+    m_currentLoopCount = 0;
 
-    while (true)
+    while (m_currentLoopCount <= m_maxLoopCount)
     {
-        if ((m_stepValue >= 0 && m_currentLoopValue >= m_endValue) || (m_stepValue < 0 && m_currentLoopValue <= m_endValue))
+        if (m_logLevel > 1)
         {
-            std::cerr << "Finished loop\n";
-            std::exit(0);
+            std::cerr << "m_currentLoopCount = " << m_currentLoopCount << " m_currentLoopCount = " << m_currentLoopCount << "\n";
+            std::cerr << "lastPopulation = " << lastPopulation << " lastConfig = " << lastConfig << "\n";
         }
-
-        if (m_currentLoopCount)
-        {
-            // get the population and config from the output of the previous runGA
-            runGaitSym(); // run gaitsym and generate ModelState.xml
-            std::filesystem::path outputFolder(m_outputFolder);
-            lastConfig = (outputFolder / "ModelState.xml");
-            if (!std::filesystem::exists(lastConfig))
-            {
-                std::cerr << "Error: MergeXML: Unable to find ModelState.xml in: \"" << m_outputFolder << "\"\n";
-                exit(1);
-            }
-            std::vector<std::filesystem::path> files = listFilesMatching(outputFolder, std::regex("^Population.*.txt$"));
-            if (files.size() == 0)
-            {
-                std::cerr << "Error: MergeXML: Unable to find Population*.txt in: \"" << m_outputFolder << "\"\n";
-                exit(1);
-            }
-
-            lastPopulation = files.back();
-            m_currentLoopCount++;
-            m_currentLoopValue += m_stepValue;
-            if (m_stepValue >= 0 && (m_currentLoopValue > m_endValue || fabs(m_currentLoopValue - m_endValue) < fabs(m_stepValue) * 0.0001)) m_currentLoopValue = m_endValue;
-            if (m_stepValue < 0 && (m_currentLoopValue < m_endValue || fabs(m_currentLoopValue - m_endValue) < fabs(m_stepValue) * 0.0001)) m_currentLoopValue = m_endValue;
-        }
-
-
         std::filesystem::path driverFile(m_driverFile);
         std::filesystem::path workingFolder(m_workingFolder);
         std::string errorMessage;
@@ -127,8 +100,8 @@ void Wrapper::runMergeXML()
 
         std::filesystem::path subFolder(toString("%04d_Run_%s", m_currentLoopCount, timeString.c_str()));
         std::filesystem::path outputFolder = workingFolder / subFolder;
-        m_outputFolder = outputFolder.string();
-        if (m_logLevel > 1) std::cerr << "Creating \"" << outputFolder << "\"\n";
+        m_outputFolder = toAbsolutePath(outputFolder);
+        if (m_logLevel > 1) std::cerr << "Creating " << outputFolder << "\n";
         std::filesystem::create_directories(outputFolder);
         if (!std::filesystem::is_directory(outputFolder))
         {
@@ -136,13 +109,13 @@ void Wrapper::runMergeXML()
             std::exit(1);
         }
         std::filesystem::path workingConfig = (outputFolder / "workingConfig.xml");
-        m_xmlMasterFile = workingConfig.string();
+        m_xmlMasterFile = toAbsolutePath(workingConfig);
         std::filesystem::path firstConfigFile = m_modelConfigurationFile;
-        std::string replace = pystring::replace(mergeXMLCommands, "MODEL_CONFIG_FILE", lastConfig.string());
-        replace = pystring::replace(replace, "DRIVER_CONFIG_FILE", driverFile.string());
-        replace = pystring::replace(replace, "WORKING_CONFIG_FILE", workingConfig.string());
+        std::string replace = pystring::replace(mergeXMLCommands, "MODEL_CONFIG_FILE", toAbsolutePath(lastConfig));
+        replace = pystring::replace(replace, "DRIVER_CONFIG_FILE", toAbsolutePath(driverFile));
+        replace = pystring::replace(replace, "WORKING_CONFIG_FILE", toAbsolutePath(workingConfig));
         replace = pystring::replace(replace, "CURRENT_LOOP_VALUE", toString("%.*gs", 17, m_currentLoopValue));
-        replace = pystring::replace(replace, "FIRST_CONFIG_FILE", firstConfigFile.string());
+        replace = pystring::replace(replace, "FIRST_CONFIG_FILE", toAbsolutePath(firstConfigFile));
         MergeXML mergeXML;
         mergeXML.ExecuteInstructionFile(replace);
         if (mergeXML.errorMessageList().size())
@@ -151,7 +124,7 @@ void Wrapper::runMergeXML()
             std::exit(1);
         }
         std::filesystem::path newMergeXML = outputFolder / "workingMergeXML.txt";
-        if (m_logLevel > 1) std::cerr << "Writing \"" << newMergeXML << "\"\n";
+        if (m_logLevel > 1) std::cerr << "Writing " << newMergeXML << "\n";
         std::ofstream file(newMergeXML, std::ios::out | std::ios::binary);
         if (!file.is_open())
         {
@@ -161,7 +134,7 @@ void Wrapper::runMergeXML()
         file.write(replace.c_str(), replace.size());
         file.close();
         std::filesystem::path mergeXMLStatusFile = outputFolder / "mergeXMLStatus.txt";
-        if (m_logLevel > 1) std::cerr << "Writing \"" << mergeXMLStatusFile << "\"\n";
+        if (m_logLevel > 1) std::cerr << "Writing " << mergeXMLStatusFile << "\n";
         std::ofstream stream(mergeXMLStatusFile, std::ios::out | std::ios::binary);
         if (!stream.is_open())
         {
@@ -181,11 +154,27 @@ void Wrapper::runMergeXML()
         stream << "FIRST_CONFIG_FILE " << firstConfigFile << "\n";
         stream.close();
         std::filesystem::path newPopulation = outputFolder / "workingPopulation.txt";
-        if (m_logLevel > 1) std::cerr << "Copying \"" << lastPopulation << "\" to \"" << newPopulation << "\"\n";
+        if (m_logLevel > 1) std::cerr << "Copying " << lastPopulation << " to " << newPopulation << "\n";
         std::filesystem::copy_file(lastPopulation, newPopulation);
-        m_startingPopulationFile = newPopulation.string();
+        m_startingPopulationFile = toAbsolutePath(newPopulation);
         runPostMergeScript();
         runGA();
+        runGaitSym();
+        lastConfig = (outputFolder / "ModelState.xml");
+        if (!std::filesystem::exists(lastConfig))
+        {
+            std::cerr << "Error: MergeXML: Unable to find ModelState.xml in: \"" << m_outputFolder << "\"\n";
+            exit(1);
+        }
+        std::vector<std::filesystem::path> files = listFilesMatching(outputFolder, std::regex("^Population.*\\.txt$"));
+        if (files.size() == 0)
+        {
+            std::cerr << "Error: MergeXML: Unable to find ^Population.*\\.txt$ in: \"" << m_outputFolder << "\"\n";
+            exit(1);
+        }
+        lastPopulation = files.back();
+        m_currentLoopCount++;
+        m_currentLoopValue = m_startValue + m_currentLoopCount * m_stepValue;
     }
 }
 
@@ -201,11 +190,14 @@ void Wrapper::runPostMergeScript()
                 "--currentLoopValue", toString("%.*g", 17, m_currentLoopValue),
                 "--logLevel", std::to_string(m_logLevel)};
 
-        int returnCode;
         if (m_logLevel > 0) std::cerr << "Running \"" << m_postMergeScript << "\"\n";
         if (m_logLevel > 1) std::cerr << pystring::join(" "s, arguments) << "\n";
-        std::string output = runCommand(m_postMergeScript, arguments, &returnCode);
-        std::cerr << output;
+        int returnCode = runCommand(m_postMergeScript, arguments);
+        if (returnCode)
+        {
+            std::cerr << "Error " << returnCode << " running \"" << m_postMergeScript << "\"\n";
+            std::exit(1);
+        }
     }
     else
     {
@@ -244,12 +236,15 @@ void Wrapper::runPostMergeScript()
                                            "--xmlMasterFile", m_xmlMasterFile,
                                            "--outputFolder", m_outputFolder,
                                            "--currentLoopValue", toString("%.*g", 17, m_currentLoopValue),
-                                           "--logLevel", std::to_string(m_logLevel)};
-        int returnCode;
+                                           "--logLevel", std::to_string(m_logLevel)};        
         if (m_logLevel > 0) std::cerr << "Running \"" << m_postMergeScript << "\" \"" << arguments.front() << "\"\n";
         if (m_logLevel > 1) std::cerr << pystring::join(" "s, std::vector<std::string>(arguments.begin() + 1, arguments.end())) << "\n";
-        std::string output = runCommand(interpreter.string(), arguments, &returnCode);
-        std::cerr << output;
+        int returnCode = runCommand(toAbsolutePath(interpreter), arguments);
+        if (returnCode)
+        {
+            std::cerr << "Error " << returnCode << " running \"" << m_postMergeScript << "\" \"" << arguments.front() << "\"\n";
+            std::exit(1);
+        }
     }
 }
 
@@ -257,10 +252,10 @@ void Wrapper::runGaitSym()
 {
     if (m_logLevel > 0) std::cerr << "Running GaitSym\n";
     std::filesystem::path dir(m_outputFolder);
-    std::vector<std::filesystem::path> files = listFilesMatching(dir, std::regex("^BestGenome*.txt$"));
+    std::vector<std::filesystem::path> files = listFilesMatching(dir, std::regex("^BestGenome.*\\.txt$"));
     if (files.size() < 1)
     {
-        std::cerr << "Error: runGaitSym: Unable to find BestGenome*.txt\n";
+        std::cerr << "Error: runGaitSym: Unable to find ^BestGenome.*\\.txt$\n";
         std::exit(1);
     }
     std::filesystem::path inputGenome = files.back();
@@ -271,15 +266,15 @@ void Wrapper::runGaitSym()
     std::vector<int> circularMutationFlags;
     double fitness;
     int genomeType;
-    if (m_logLevel > 1) std::cerr << "Reading genome file \"" << inputGenome << "\"\n";
-    MergeUtil::readGenome(inputGenome.string(), &genes, &lowBounds, &highBounds, &gaussianSDs, &circularMutationFlags, &fitness, &genomeType);
+    if (m_logLevel > 1) std::cerr << "Reading genome file " << inputGenome << "\n";
+    MergeUtil::readGenome(toAbsolutePath(inputGenome), &genes, &lowBounds, &highBounds, &gaussianSDs, &circularMutationFlags, &fitness, &genomeType);
     XMLConverter xmlConverter;
-    if (m_logLevel > 1) std::cerr << "Reading base XML file \"" << inputXML << "\"\n";
-    xmlConverter.LoadBaseXMLFile(inputXML.string());
+    if (m_logLevel > 1) std::cerr << "Reading base XML file " << inputXML << "\n";
+    xmlConverter.LoadBaseXMLFile(toAbsolutePath(inputXML));
     xmlConverter.ApplyGenome(genes);
     std::string formattedXML;
     xmlConverter.GetFormattedXML(&formattedXML);
-    if (m_logLevel > 1) std::cerr << "Writing new XML file \"" << outputXML << "\"\n";
+    if (m_logLevel > 1) std::cerr << "Writing new XML file " << outputXML << "\n";
     std::ofstream outputXMLFile(outputXML, std::ios::binary);
     outputXMLFile.write(formattedXML.data(), formattedXML.size());
     outputXMLFile.close();
@@ -292,17 +287,15 @@ void Wrapper::runGaitSym()
     }
     std::vector<std::string> arguments;
     arguments.push_back("--config");
-    arguments.push_back(outputXML.string());
+    arguments.push_back(toAbsolutePath(outputXML));
     if (m_cycle) arguments.push_back("--outputModelStateAtCycle");
     else arguments.push_back("--outputModelStateAtTime");
     arguments.push_back(toString("%.*g", 17, m_outputCycle)); // this lets you set the precision as an argument
     arguments.push_back("--modelState");
-    arguments.push_back(modelStateFileName.string());
-    int exitStatus;
+    arguments.push_back(toAbsolutePath(modelStateFileName));
     if (m_logLevel > 0) std::cerr << "Running \"" << m_gaitSymExecutable << "\"\n";
     if (m_logLevel > 1) std::cerr << pystring::join(" "s, arguments) << "\n";
-    std::string output = runCommand(m_gaitSymExecutable, arguments, &exitStatus);
-    std::cerr << output;
+    int exitStatus = runCommand(m_gaitSymExecutable, arguments);
     if (exitStatus)
     {
         std::cerr << "Error: runGaitSym: fail running \"" << m_gaitSymExecutable << "\"\n";
@@ -310,7 +303,7 @@ void Wrapper::runGaitSym()
     }
     if (!std::filesystem::exists(modelStateFileName) && !std::filesystem::is_regular_file(modelStateFileName))
     {
-        std::cerr << "Error :runGaitSym: Unable to create: \"" << modelStateFileName << "\"\n";
+        std::cerr << "Error :runGaitSym: Unable to create: " << modelStateFileName << "\n";
         exit(1);
     }
 }
@@ -326,60 +319,60 @@ void Wrapper::openSettingsFile(const std::string &fileName)
     }
 
     char *attributePtr, *endPtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "outputFolder"); if (attributePtr) m_outputFolder = toAbsolutePath(attributePtr);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "parameterFile"); if (attributePtr) m_parameterFile = toAbsolutePath(attributePtr);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "xmlMasterFile"); if (attributePtr) m_xmlMasterFile = toAbsolutePath(attributePtr);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "startingPopulationFile"); if (attributePtr) m_startingPopulationFile = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "cycle"); if (attributePtr) m_cycle = toBool(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "driverFile"); if (attributePtr) m_driverFile = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "endExpressionMarker"); if (attributePtr) m_endExpressionMarker = attributePtr;
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "endValue"); if (attributePtr) m_endValue = std::strtof(attributePtr, &endPtr);;
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "gaExecutable"); if (attributePtr) m_gaExecutable = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "gaitSymExecutable"); if (attributePtr) m_gaitSymExecutable = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "logLevel"); if (attributePtr && !m_overrideLogLevel) m_logLevel = std::strtol(attributePtr, &endPtr, 10);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "mergeXMLActivate"); if (attributePtr) m_mergeXMLActivate = toBool(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "mergeXMLFile"); if (attributePtr) m_mergeXMLFile = toAbsolutePath(attributePtr);
     attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "modelConfigurationFile"); if (attributePtr) m_modelConfigurationFile = toAbsolutePath(attributePtr);
     attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "modelPopulationFile"); if (attributePtr) m_modelPopulationFile = toAbsolutePath(attributePtr);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "driverFile"); if (attributePtr) m_driverFile = toAbsolutePath(attributePtr);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "workingFolder"); if (attributePtr) m_workingFolder = toAbsolutePath(attributePtr);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "mergeXMLFile"); if (attributePtr) m_mergeXMLFile = toAbsolutePath(attributePtr);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "gaitSymExecutable"); if (attributePtr) m_gaitSymExecutable = toAbsolutePath(attributePtr);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "gaExecutable"); if (attributePtr) m_gaExecutable = toAbsolutePath(attributePtr);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "postMergeScript"); if (attributePtr && std::strlen(attributePtr)) m_postMergeScript = toAbsolutePath(attributePtr);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "logLevel"); if (attributePtr && !m_overrideLogLevel) m_logLevel = std::strtol(attributePtr, &endPtr, 10);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "portNumber"); if (attributePtr) m_portNumber = std::strtol(attributePtr, &endPtr, 10);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "startValue"); if (attributePtr) m_startValue = std::strtof(attributePtr, &endPtr);;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "stepValue"); if (attributePtr) m_stepValue = std::strtof(attributePtr, &endPtr);;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "endValue"); if (attributePtr) m_endValue = std::strtof(attributePtr, &endPtr);;
     attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "outputCycle"); if (attributePtr) m_outputCycle = std::strtof(attributePtr, &endPtr);;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "endValue"); if (attributePtr) m_endValue = std::strtof(attributePtr, &endPtr);;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "mergeXMLActivate"); if (attributePtr) m_mergeXMLActivate = toBool(attributePtr);
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "cycle"); if (attributePtr) m_cycle = toBool(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "outputFolder"); if (attributePtr) m_outputFolder = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "parameterFile"); if (attributePtr) m_parameterFile = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "portNumber"); if (attributePtr) m_portNumber = std::strtol(attributePtr, &endPtr, 10);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "postMergeScript"); if (attributePtr && std::strlen(attributePtr)) m_postMergeScript = toAbsolutePath(attributePtr);
     attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "startExpressionMarker"); if (attributePtr) m_startExpressionMarker = attributePtr;
-    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "endExpressionMarker"); if (attributePtr) m_endExpressionMarker = attributePtr;
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "startValue"); if (attributePtr) m_startValue = std::strtof(attributePtr, &endPtr);;
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "startingPopulationFile"); if (attributePtr) m_startingPopulationFile = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "stepValue"); if (attributePtr) m_stepValue = std::strtof(attributePtr, &endPtr);;
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "workingFolder"); if (attributePtr) m_workingFolder = toAbsolutePath(attributePtr);
+    attributePtr =  xmlContainer.DoXmlGetProp("SETTINGS", 0, 0, "xmlMasterFile"); if (attributePtr) m_xmlMasterFile = toAbsolutePath(attributePtr);
 
+    m_maxLoopCount = static_cast<int>(std::round((m_endValue - m_startValue) / m_stepValue));
+    m_currentLoopValue = m_startValue;
 
     if (m_logLevel > 1)
     {
-        std::cerr << "m_parameterFile = "          << m_parameterFile << '\n'
-                  << "m_startingPopulationFile = " << m_startingPopulationFile << '\n'
-                  << "m_xmlMasterFile = "          << m_xmlMasterFile << '\n'
-                  << "m_outputFolder = "           << m_outputFolder << '\n'
+        std::cerr
+                  << "m_currentLoopCount = "       << m_currentLoopCount << '\n'
+                  << "m_currentLoopValue = "       << m_currentLoopValue << '\n'
+                  << "m_cycle = "                  << std::boolalpha << m_cycle << '\n'
+                  << "m_driverFile = "             << m_driverFile << '\n'
+                  << "m_endExpressionMarker = "    << m_endExpressionMarker << '\n'
+                  << "m_endValue = "               << m_endValue << '\n'
                   << "m_gaExecutable = "           << m_gaExecutable << '\n'
                   << "m_gaitSymExecutable = "      << m_gaitSymExecutable << '\n'
+                  << "m_logLevel = "               << m_logLevel << '\n'
+                  << "m_mergeXMLActivate = "       << std::boolalpha << m_mergeXMLActivate << '\n'
+                  << "m_mergeXMLFile = "           << m_mergeXMLFile << '\n'
                   << "m_modelConfigurationFile = " << m_modelConfigurationFile << '\n'
                   << "m_modelPopulationFile = "    << m_modelPopulationFile << '\n'
-                  << "m_driverFile = "             << m_driverFile << '\n'
-                  << "m_mergeXMLFile = "           << m_mergeXMLFile << '\n'
-                  << "m_workingFolder = "          << m_workingFolder << '\n'
-                  << "m_postMergeScript = "        << m_postMergeScript << '\n'
-                  << "m_startValue = "             << m_startValue << '\n'
-                  << "m_stepValue = "              << m_stepValue << '\n'
-                  << "m_endValue = "               << m_endValue << '\n'
                   << "m_outputCycle = "            << m_outputCycle << '\n'
-                  << "m_mergeXMLActivate = "       << std::boolalpha << m_mergeXMLActivate << '\n'
-                  << "m_cycle = "                  << std::boolalpha << m_cycle << '\n'
-                  << "m_logLevel = "               << m_logLevel << '\n'
+                  << "m_outputFolder = "           << m_outputFolder << '\n'
                   << "m_overrideLogLevel = "       << std::boolalpha << m_overrideLogLevel << '\n'
+                  << "m_parameterFile = "          << m_parameterFile << '\n'
                   << "m_portNumber = "             << m_portNumber << '\n'
-                  << "m_currentLoopValue = "       << m_currentLoopValue << '\n'
-                  << "m_currentLoopCount = "       << m_currentLoopCount << '\n'
-                  << "m_lastResultsTime = "        << m_lastResultsTime.time_since_epoch().count() << '\n'
-                  << "m_lastResultsNumber = "      << m_lastResultsNumber << '\n'
+                  << "m_postMergeScript = "        << m_postMergeScript << '\n'
                   << "m_startExpressionMarker = "  << m_startExpressionMarker << '\n'
-                  << "m_endExpressionMarker = "    << m_endExpressionMarker << '\n';
+                  << "m_startValue = "             << m_startValue << '\n'
+                  << "m_startingPopulationFile = " << m_startingPopulationFile << '\n'
+                  << "m_stepValue = "              << m_stepValue << '\n'
+                  << "m_workingFolder = "          << m_workingFolder << '\n'
+                  << "m_xmlMasterFile = "          << m_xmlMasterFile << '\n';
     }
 }
 
@@ -469,9 +462,8 @@ std::string Wrapper::shellEscape(const std::string& arg)
     return out;
 }
 
-std::string Wrapper::runCommand(const std::string& program, const std::vector<std::string>& args, int *exitStatus)
+int Wrapper::runCommand(const std::string& program, const std::vector<std::string>& args, std::string *result)
 {
-    std::string result;
     std::ostringstream cmd;
     cmd << shellEscape(program);
 
@@ -479,29 +471,30 @@ std::string Wrapper::runCommand(const std::string& program, const std::vector<st
     {
         cmd << " " << shellEscape(a);
     }
-    cmd << " 2>&1";  // redirect stderr to stdout
 
-#if defined(_WIN32)
-    FILE* pipe = _popen(cmd.str().c_str(), "r");
-#else
-    FILE* pipe = popen(cmd.str().c_str(), "r");
-#endif
-
-    if (!pipe)
+    if (result)
     {
-        *exitStatus = -1;
-        return result;
-    }
-
-    char buffer[1024];
-    while (fgets(buffer, sizeof(buffer), pipe)) { result += buffer; }
+        cmd << " 2>&1";  // redirect stderr to stdout
+        result->clear();
 
 #if defined(_WIN32)
-    *exitStatus = _pclose(pipe);
+        FILE* pipe = _popen(cmd.str().c_str(), "r");
 #else
-    *exitStatus = pclose(pipe);
+        FILE* pipe = popen(cmd.str().c_str(), "r");
 #endif
-    return result;
+
+        if (!pipe) { return -1; }
+
+        char buffer[1024];
+        while (fgets(buffer, sizeof(buffer), pipe)) { *result += buffer; }
+
+#if defined(_WIN32)
+        return _pclose(pipe);
+#else
+        return pclose(pipe);
+#endif
+    }
+    return std::system(cmd.str().c_str());
 }
 
 
@@ -576,7 +569,7 @@ std::string Wrapper::readFileToString(const std::string &pathString, std::string
 
     if (file.bad())
     {
-        if (errorMessage) { *errorMessage = "I/O error while reading file: " + pathString; }
+        if (errorMessage) { *errorMessage = "I/O error while reading file: \""s + pathString + "\n"s; }
         return result;
     }
 

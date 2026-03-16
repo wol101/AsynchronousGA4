@@ -120,6 +120,7 @@ private:
     int m_runMergeXML = 0;
     double m_currentLoopValue = 0;
     int m_currentLoopCount = 0;
+    int m_maxLoopCount = 0;
     QDateTime m_lastResultsTime;
     int m_lastResultsNumber = -1;
 
