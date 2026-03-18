@@ -14,11 +14,15 @@ From: ubuntu:24.04
 %files
     ../terminal/Release/bin/AsynchronousGA4CL /usr/local/bin/AsynchronousGA4CL
     ../AsynchronousGA4NoUI/Release/bin/AsynchronousGA4NoUI /usr/local/bin/AsynchronousGA4NoUI
+    ../../GaitSym5/terminal/Release/bin/gaitsym5_asio /usr/local/bin/gaitsym5_asio
+    ../../GaitSym5/terminal/Release/bin/gaitsym5 /usr/local/bin/gaitsym5
 
 # make it executable
 %post
     chmod +x /usr/local/bin/AsynchronousGA4CL
     chmod +x /usr/local/bin/AsynchronousGA4NoUI
+    chmod +x /usr/local/bin/gaitsym5_asio
+    chmod +x /usr/local/bin/gaitsym5
 
 # allow command line arguments to be passed when run
 %runscript
