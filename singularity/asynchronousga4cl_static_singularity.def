@@ -23,6 +23,9 @@ From: ubuntu:24.04
     chmod +x /usr/local/bin/AsynchronousGA4NoUI
     chmod +x /usr/local/bin/gaitsym5_asio
     chmod +x /usr/local/bin/gaitsym5
+    # install python because I use it in scripts
+    apt-get update && apt-get install -y --no-install-recommends python3 && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 
 # allow command line arguments to be passed when run
 %runscript
