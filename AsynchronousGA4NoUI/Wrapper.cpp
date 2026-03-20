@@ -629,7 +629,7 @@ bool Wrapper::toBool(const std::string& s, bool *valid)
 
 std::string Wrapper::toCanonicalPath(const std::filesystem::path &path)
 {
-    std::u8string canonicalPathString = std::filesystem::canonical(path).u8string();
+    std::u8string canonicalPathString = std::filesystem::weakly_canonical(path).u8string(); // ::weakly_canonical does not require the item to exist whereas ::canonical does
     return toString(canonicalPathString);
 }
 
