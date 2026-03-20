@@ -1,8 +1,6 @@
 #ifndef WRAPPER_H
 #define WRAPPER_H
 
-#include <sstream>
-#include <chrono>
 #include <filesystem>
 #include <regex>
 #include <vector>
@@ -24,8 +22,8 @@ public:
     static std::string toString(const char * const printfFormatString, ...);
     static std::filesystem::path existsOnPath(const std::filesystem::path &filename);
     static bool toBool(const std::string& s, bool *valid = 0);
-    static std::string toAbsolutePath(const std::string &pathString);
-
+    static std::string toCanonicalPath(const std::filesystem::path &path);
+    static std::string toString(const std::u8string &u8);
 
     void setLogLevel(int newLogLevel);
 

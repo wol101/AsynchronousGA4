@@ -637,8 +637,16 @@ void MainWindow::runGaitSym()
     xmlConverter.ApplyGenome(genes);
     std::string formattedXML;
     xmlConverter.GetFormattedXML(&formattedXML);
+    std::string indentedXML;
+    XMLIndenter::XmlError xmlError = XMLIndenter::reformatXml(formattedXML, indentedXML);
+    if (xmlError != XMLIndenter::XmlError::Ok)
+    {
+        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("runGaitSym: indent error:\n%1").arg(XMLIndenter::xmlErrorMessage(xmlError)));
+        QMessageBox::warning(this, tr("Indent XML Error"), QString("runGaitSym: indent error:\n%1").arg(XMLIndenter::xmlErrorMessage(xmlError)));
+        return;
+    }
     std::ofstream outputXMLFile(outputXML.toStdString(), std::ios::binary);
-    outputXMLFile.write(formattedXML.data(), formattedXML.size());
+    outputXMLFile.write(indentedXML.data(), indentedXML.size());
     outputXMLFile.close();
 
     QString modelStateFileName = dir.filePath("ModelState.xml");
