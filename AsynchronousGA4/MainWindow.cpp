@@ -273,7 +273,7 @@ void MainWindow::pushButtonStartClicked()
     if (ui->checkBoxMergeXMLActivate->isChecked())
     {
         m_runMergeXML = 1;
-        m_maxLoopCount = static_cast<int>(std::round((ui->doubleSpinBoxEndValue->value() - ui->doubleSpinBoxEndValue->value()) / ui->doubleSpinBoxStepValue->value()));
+        m_maxLoopCount = static_cast<int>(std::round((ui->doubleSpinBoxEndValue->value() - ui->doubleSpinBoxStartValue->value()) / ui->doubleSpinBoxStepValue->value()));
         m_currentLoopCount = 0;
         m_mergeXMLTimer->start(1000);
     }
@@ -411,6 +411,7 @@ void MainWindow::runMergeXML()
     }
     ui->lineEditCurrentLoopValue->setText(QString::number(m_currentLoopValue, 'f', 3));
     ui->lineEditCurrentLoopCount->setText(QString::number(m_currentLoopCount, 'f', 3));
+    if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("Loop count = %1 out of max loop count = %2").arg(m_currentLoopCount).arg(m_maxLoopCount));
     QFileInfo driverFile(ui->lineEditDriverFile->text());
     QFileInfo workingFolder(ui->lineEditWorkingFolder->text());
     QFile mergeXMLFile(ui->lineEditMergeXMLFile->text());
