@@ -113,6 +113,7 @@ private:
     QString convertToRelativePath(const QString &filename);
     QString convertToAbsolutePath(const QString &filename);
     QString existsOnPath(const QString &filename);
+    std::string settingsToString();
 
     Ui::MainWindow *ui = nullptr;
     QProcess *m_ga = nullptr;

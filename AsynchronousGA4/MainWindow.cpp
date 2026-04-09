@@ -1222,6 +1222,35 @@ void MainWindow::save()
         return;
     }
 
+    std::string indented = settingsToString();
+    qint64 bytesWritten = file.write(indented.c_str(), indented.size());
+    if (bytesWritten != indented.size())
+    {
+        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("save: Unable to write file (write):\n%1").arg(m_asynchronousGAFileName));
+        QMessageBox::warning(this, tr("Save File Error"), QString("save: Unable to write file (write):\n%1").arg(m_asynchronousGAFileName));
+    }
+    file.close();
+    if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("'%1' written").arg(m_asynchronousGAFileName));
+    ui->statusBar->showMessage(QString("'%1' written").arg(m_asynchronousGAFileName));
+    m_asynchronousGAFileModified = false;
+    m_asynchronousGAFileNameValid = true;
+    activateButtons();
+    setCustomTitle();
+}
+
+void MainWindow::saveAs()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Run Settings File"), m_asynchronousGAFileName, tr("XML Files (*.xml);;Any File (*.* *)"));
+    if (!fileName.isEmpty())
+    {
+        m_asynchronousGAFileName = fileName;
+        save();
+    }
+}
+
+std::string MainWindow::settingsToString()
+{
+    std::string indented;
     writeSettings(); // makes sure the settings are all up to date
 
     QDomDocument doc("AsynchronousGA_Settings_Document_0.1");
@@ -1258,37 +1287,14 @@ void MainWindow::save()
     dataItemsElement.setAttribute("endExpressionMarker", QString::fromStdString(m_endExpressionMarker));
 
     // and now the actual xml doc
-    std::string indented;
     XMLIndenter::XmlError xmlError = XMLIndenter::reformatXml(doc.toString(-1).toStdString(), indented);
     if (xmlError != XMLIndenter::XmlError::Ok)
     {
         if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("save: indent error:\n%1").arg(XMLIndenter::xmlErrorMessage(xmlError)));
         QMessageBox::warning(this, tr("Save File Error"), QString("save: indent error:\n%1").arg(XMLIndenter::xmlErrorMessage(xmlError)));
-        return;
+        return ""s;
     }
-    qint64 bytesWritten = file.write(indented.c_str(), indented.size());
-    if (bytesWritten != indented.size())
-    {
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("save: Unable to write file (write):\n%1").arg(m_asynchronousGAFileName));
-        QMessageBox::warning(this, tr("Save File Error"), QString("save: Unable to write file (write):\n%1").arg(m_asynchronousGAFileName));
-    }
-    file.close();
-    if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("'%1' written").arg(m_asynchronousGAFileName));
-    ui->statusBar->showMessage(QString("'%1' written").arg(m_asynchronousGAFileName));
-    m_asynchronousGAFileModified = false;
-    m_asynchronousGAFileNameValid = true;
-    activateButtons();
-    setCustomTitle();
-}
-
-void MainWindow::saveAs()
-{
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save Run Settings File"), m_asynchronousGAFileName, tr("XML Files (*.xml);;Any File (*.* *)"));
-    if (!fileName.isEmpty())
-    {
-        m_asynchronousGAFileName = fileName;
-        save();
-    }
+    return indented;
 }
 
 QString MainWindow::convertToRelativePath(const QString &filename)
@@ -1323,16 +1329,8 @@ QString MainWindow::existsOnPath(const QString &filename)
 void MainWindow::editSettings()
 {
     TextEditDialog textEditDialog(this);
-    QFile editFile(m_asynchronousGAFileName);
-    if (editFile.open(QFile::ReadOnly) == false)
-    {
-        if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("editSettings: Unable to open file (read):\n%1").arg(m_asynchronousGAFileName));
-        QMessageBox::warning(this, tr("Open File Error"), QString("editSettings: Unable to open file (read):\n%1").arg(m_asynchronousGAFileName));
-        return;
-    }
-    QByteArray editFileData = editFile.readAll();
-    editFile.close();
-    QString editFileText = QString::fromUtf8(editFileData);
+    std::string indented = settingsToString();
+    QString editFileText = QString::fromStdString(indented);
 
     textEditDialog.useXMLSyntaxHighlighter();
     textEditDialog.setEditorText(editFileText);
@@ -1341,13 +1339,14 @@ void MainWindow::editSettings()
 
     if (status == QDialog::Accepted) // write the new settings
     {
+        QFile editFile(m_asynchronousGAFileName);
         if (editFile.open(QFile::WriteOnly) == false)
         {
             if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("editSettings: Unable to open file (write):\n%1").arg(m_asynchronousGAFileName));
             QMessageBox::warning(this, tr("Open File Error"), QString("editSettings: Unable to open file (write):\n%1").arg(m_asynchronousGAFileName));
             return;
         }
-        editFileData = textEditDialog.editorText().toUtf8();
+        QByteArray editFileData = textEditDialog.editorText().toUtf8();
         editFile.write(editFileData);
         editFile.close();
         if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("'%1' written").arg(m_asynchronousGAFileName));
@@ -1500,7 +1499,6 @@ void MainWindow::menuRequestPath(QPoint pos)
         {
             TextEditDialog textEditDialog(this);
             QString fileName = lineEdit->text();
-            if (fileName.endsWith(".xml", Qt::CaseInsensitive) || fileName.endsWith(".gaitsym", Qt::CaseInsensitive)) textEditDialog.useXMLSyntaxHighlighter();
             QFile editFile(fileName);
             if (editFile.open(QFile::ReadOnly) == false)
             {
@@ -1512,6 +1510,19 @@ void MainWindow::menuRequestPath(QPoint pos)
             editFile.close();
             QString editFileText = QString::fromUtf8(editFileData);
 
+            if (fileName.endsWith(".xml", Qt::CaseInsensitive) || fileName.endsWith(".gaitsym", Qt::CaseInsensitive))
+            {
+                textEditDialog.useXMLSyntaxHighlighter();
+                std::string indented;
+                XMLIndenter::XmlError xmlError = XMLIndenter::reformatXml(editFileText.toStdString(), indented);
+                if (xmlError != XMLIndenter::XmlError::Ok)
+                {
+                    if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("menuRequestPath: indent error:\n%1").arg(XMLIndenter::xmlErrorMessage(xmlError)));
+                    QMessageBox::warning(this, tr("Save File Error"), QString("menuRequestPath: indent error:\n%1").arg(XMLIndenter::xmlErrorMessage(xmlError)));
+                    return;
+                }
+                editFileText = QString::fromStdString(indented);
+            }
             textEditDialog.setEditorText(editFileText);
 
             int status = textEditDialog.exec();
@@ -1568,6 +1579,12 @@ void MainWindow::menuRequestPath(QPoint pos)
                 QString newData = gaParametersDialog.editorText().toUtf8();
                 std::string indented;
                 XMLIndenter::XmlError xmlError = XMLIndenter::reformatXml(newData.toStdString(), indented);
+                if (xmlError != XMLIndenter::XmlError::Ok)
+                {
+                    if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("menuRequestPath: indent error:\n%1").arg(XMLIndenter::xmlErrorMessage(xmlError)));
+                    QMessageBox::warning(this, tr("Save File Error"), QString("menuRequestPath: indent error:\n%1").arg(XMLIndenter::xmlErrorMessage(xmlError)));
+                    return;
+                }
                 editFile.write(indented.c_str(), indented.size());
                 editFile.close();
                 if (ui->spinBoxLogLevel->value() > 0) appendProgress(QString("'%1' written").arg(lineEdit->text()));
