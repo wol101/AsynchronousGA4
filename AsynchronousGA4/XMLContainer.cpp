@@ -10,6 +10,7 @@
 #include "XMLContainer.h"
 #include "MergeUtil.h"
 #include "XMLConverter.h"
+#include "XMLIndenter.h"
 
 #include "rapidxml.hpp"
 #include "rapidxml_print.hpp"
@@ -89,21 +90,28 @@ int XMLContainer::WriteXML(const std::string &filename)
     std::stringstream outputStream;
     outputStream.precision(17);
 
-    outputStream << "<" << m_rootNode << ">\n\n";
+    outputStream << "<" << m_rootNode << ">\n";
 
     for (unsigned int i = 0; i < m_tagContentsList.size(); i++)
     {
-        outputStream << (*m_tagContentsList[i]) << "\n";
+        outputStream << (*m_tagContentsList[i]);
     }
 
-    outputStream << "</" << m_rootNode << ">\n\n";
+    outputStream << "</" << m_rootNode << ">\n";
+
+    std::string indented;
+    XMLIndenter::XmlError xmlError = XMLIndenter::reformatXml(outputStream.str(), indented);
+    if (xmlError != XMLIndenter::XmlError::Ok)
+    {
+        return __LINE__;
+    }
 
     try
     {
         std::ofstream outputFile;
         outputFile.exceptions(std::ios::failbit|std::ios::badbit);
         outputFile.open(filename, std::ios::out | std::ios::binary);
-        outputFile << outputStream.rdbuf();
+        outputFile << indented;
         outputFile.close();
     }
     catch (...)
