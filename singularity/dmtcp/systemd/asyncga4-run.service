@@ -1,0 +1,13 @@
+[Unit]
+Description=AsynchronousGA4CL (DMTCP-managed: fresh launch or restart from latest checkpoint)
+After=asyncga4-coordinator.service network.target
+
+[Service]
+Type=simple
+ExecStart=%h/asyncga4/dmtcp/asyncga4-run.sh
+Restart=on-failure
+RestartSec=30
+StartLimitIntervalSec=0
+
+[Install]
+WantedBy=default.target

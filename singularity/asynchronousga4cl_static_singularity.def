@@ -6,6 +6,21 @@
 # or run an individual command with
 # singularity exec asynchronousga4cl_container.sif AsynchronousGA4CL command_line_options
 # singularity exec asynchronousga4cl_container.sif AsynchronousGA4NoUI command_line_options
+#
+# DMTCP checkpoint/restart support - see dmtcp/README.md in this folder for
+# the full setup (host install, wrapper scripts, systemd units).
+#
+# IMPORTANT: AsynchronousGA4CL must now be built DYNAMICALLY LINKED.
+# DMTCP injects its checkpoint runtime via LD_PRELOAD, which requires a
+# dynamic linker - a fully static binary (-static) has no PT_INTERP/.dynamic
+# section and cannot be checkpointed. Drop -static from the link flags
+# (keep -static-libgcc/-static-libstdc++ if you still want those for
+# portability) before rebuilding the binary this file packages, then verify
+# with `file` that it reports "dynamically linked", not "statically linked".
+#
+# /opt/asyncga4/ckpt and /opt/asyncga4/run are fixed, world-writable mount
+# points the host binds checkpoint/working directories into at runtime
+# (see dmtcp/asyncga4-run.sh). They are intentionally empty in the image.
 
 Bootstrap: docker
 From: ubuntu:24.04
@@ -25,6 +40,31 @@ From: ubuntu:24.04
     chmod +x /usr/local/bin/gaitsym5
     # install python because I use it in scripts
     apt-get update && apt-get install -y --no-install-recommends python3 && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+    # --- DMTCP (checkpoint/restart) ---
+    # Built from source and pinned to an exact version so it matches the
+    # host-side install built by dmtcp/install_dmtcp_host.sh: the
+    # coordinator wire protocol and checkpoint image format are only
+    # guaranteed compatible within the same DMTCP version.
+    DMTCP_VERSION=4.2.0
+    apt-get update
+    apt-get install -y --no-install-recommends build-essential curl ca-certificates
+    curl -fL "https://github.com/dmtcp/dmtcp/archive/refs/tags/v${DMTCP_VERSION}.tar.gz" -o /tmp/dmtcp.tar.gz
+    mkdir -p /tmp/dmtcp-src
+    tar --strip-components=1 -xzf /tmp/dmtcp.tar.gz -C /tmp/dmtcp-src
+    cd /tmp/dmtcp-src
+    ./configure --prefix=/usr/local
+    make -j"$(nproc)"
+    make install
+    ldconfig
+    cd /
+    rm -rf /tmp/dmtcp-src /tmp/dmtcp.tar.gz
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+    # fixed, world-writable mount points the host binds checkpoint/working
+    # directories into at runtime (see dmtcp/asyncga4-run.sh)
+    mkdir -p /opt/asyncga4/ckpt /opt/asyncga4/run
+    chmod 1777 /opt/asyncga4/ckpt /opt/asyncga4/run
 
 
 # allow command line arguments to be passed when run

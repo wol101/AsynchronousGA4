@@ -1,0 +1,6 @@
+[Unit]
+Description=Trigger one DMTCP checkpoint of AsynchronousGA4CL
+
+[Service]
+Type=oneshot
+ExecStart=%h/asyncga4/dmtcp/asyncga4-checkpoint.sh

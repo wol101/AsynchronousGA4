@@ -1,0 +1,12 @@
+[Unit]
+Description=DMTCP coordinator for AsynchronousGA4CL
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/asyncga4/dmtcp/asyncga4-coordinator.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
