@@ -10,19 +10,31 @@ project(AsynchronousGA4CL LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Static builds (the default) link everything, including libc, into the
+# executable so it can run unmodified across HPC nodes with mismatched
+# shared library versions. Some deployments need the opposite: e.g. running
+# under DMTCP, which injects its checkpoint runtime via LD_PRELOAD and
+# therefore requires a real dynamic linker to be present, which a fully
+# static executable does not have. Configure with -DSTATIC_BUILD=OFF to get
+# a dynamically linked build for those cases; plain cmake keeps the current
+# fully-static default.
+option(STATIC_BUILD "Link the executable statically (including libc)" ON)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 # try to maximise portability
 set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -march=x86-64 -mtune=generic")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64 -mtune=generic")
 set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
 add_link_options(-no-pie)
+add_link_options(-static-libgcc -static-libstdc++)
+if (STATIC_BUILD)
 # options for static build
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 set(CMAKE_EXE_LINKER_FLAGS "-static")
-add_link_options(-static-libgcc -static-libstdc++)
 set(CMAKE_EXE_LINK_DYNAMIC_C_FLAGS "")   # remove -rdynamic
 set(CMAKE_EXE_LINK_DYNAMIC_CXX_FLAGS "")
+endif()
 endif()
 
 if (MSVC)
@@ -74,6 +86,9 @@ target_include_directories(AsynchronousGA4CL PRIVATE
     ../pystring
 )
 
-# options for static build
+# make the linker prefer/require static archives when STATIC_BUILD is on
+# (see the STATIC_BUILD option near the top of this file)
+if (STATIC_BUILD)
 set_target_properties(AsynchronousGA4CL PROPERTIES LINK_SEARCH_START_STATIC TRUE)
 set_target_properties(AsynchronousGA4CL PROPERTIES LINK_SEARCH_END_STATIC TRUE)
+endif()
